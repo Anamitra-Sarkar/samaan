@@ -18,6 +18,7 @@ from schemas.loan import (
 from routers.auth import get_current_active_user, verify_role
 from ml.loan_ai_validator import validate_loan_proof
 from utils.file_utils import save_uploaded_file
+from utils.notification_utils import create_notification
 
 router = APIRouter()
 
@@ -56,6 +57,16 @@ async def enter_beneficiary_loan(
     db.add(loan_record)
     db.commit()
     db.refresh(loan_record)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Loan record created",
+        message=f"Loan record #{loan_record.id} was created successfully.",
+        kind="success",
+        link_path="/loan/data-entry",
+        entity_type="loan_record",
+        entity_id=loan_record.id,
+    )
     
     return loan_record
 
@@ -106,6 +117,16 @@ async def upload_loan_proof(
     db.add(loan_proof)
     db.commit()
     db.refresh(loan_proof)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Proof submitted",
+        message="Your loan proof has been submitted and is being processed.",
+        kind="info",
+        link_path="/loan/upload",
+        entity_type="loan_proof",
+        entity_id=loan_proof.id,
+    )
     
     return loan_proof
 
@@ -179,6 +200,17 @@ async def review_proof(
     proof.review_notes = review_data.notes
     
     db.commit()
+    if proof.beneficiary_id:
+        create_notification(
+            db,
+            user_id=proof.beneficiary_id,
+            title=f"Loan proof {review_data.decision}",
+            message="A submitted loan proof has been reviewed by an officer.",
+            kind="success" if review_data.decision == "approve" else "warning",
+            link_path="/loan/upload",
+            entity_type="loan_proof",
+            entity_id=proof.id,
+        )
     
     return {
         "message": "Review submitted successfully",

@@ -9,9 +9,7 @@ import {
   X,
   Menu,
   Landmark,
-  Shield,
-  ChevronLeft,
-  ChevronRight
+  Shield
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -79,7 +77,7 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   const { user } = useAuthStore()
-  const { sidebarCollapsed, toggleSidebar } = useUIStore()
+  const { sidebarCollapsed } = useUIStore()
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const [expandedSections, setExpandedSections] = useState<string[]>(['Loan Tracking', 'Credit Scoring', 'Village Gaps', 'Agency Mapping', 'DBT Tracking'])
@@ -116,37 +114,26 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed left-0 top-0 h-screen bg-[#01696f] text-white overflow-hidden z-40
+        fixed left-0 top-0 h-screen bg-[#01696f] text-white overflow-visible z-40
         transition-transform duration-300 ease-in-out
         flex flex-col
         w-[280px] lg:w-auto
         ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-[280px]'}
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className={`relative border-b border-white/20 ${sidebarCollapsed ? 'p-4' : 'p-6'} pr-12`}>
-          <div className="flex items-center justify-between gap-3">
+        <div className={`relative border-b border-white/20 ${sidebarCollapsed ? 'p-4' : 'p-6'}`}>
+          <div className="flex items-center gap-3 min-w-0">
             <h1 className={`font-bold flex items-center gap-2 min-w-0 ${sidebarCollapsed ? 'text-lg' : 'text-2xl'}`}>
               <Landmark className="h-8 w-8 text-[#d19900] shrink-0" />
               {!sidebarCollapsed && <span className="truncate">SAMAAN</span>}
             </h1>
-            <button
-              onClick={() => {
-                toggleSidebar()
-                setIsOpen(false)
-              }}
-              className="hidden lg:inline-flex absolute -right-4 top-1/2 -translate-y-1/2 h-9 w-9 items-center justify-center rounded-full bg-white text-[#01696f] shadow-lg border border-white/20 hover:scale-105 transition-transform"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-            </button>
           </div>
           {!sidebarCollapsed && (
             <p className="text-sm text-white/70 mt-2">Empowering the Marginalized through Transparent Governance</p>
           )}
         </div>
 
-        <nav className={`flex-1 overflow-y-auto p-4 ${sidebarCollapsed ? 'space-y-2 pb-28' : 'pb-32'}`}>
+        <nav className={`flex-1 min-h-0 overflow-y-auto p-4 ${sidebarCollapsed ? 'space-y-2 pb-24' : 'pb-24'}`}>
           {navItems.filter(hasAccess).map((item) => (
             <div key={item.label} className="mb-2 last:mb-0">
               {item.subItems ? (

@@ -36,6 +36,7 @@ class User(Base):
     loan_records = relationship("LoanRecord", back_populates="beneficiary")
     review_decisions = relationship("LoanProof", foreign_keys="LoanProof.reviewer_id", back_populates="reviewer")
     dbt_cases_assigned = relationship("DBTCase", foreign_keys="DBTCase.assigned_officer_id", back_populates="assigned_officer")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 class BeneficiaryProfile(Base):
     """Extended profile for beneficiaries"""

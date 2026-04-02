@@ -9,6 +9,7 @@ import {
   CheckCircle,
   Clock,
   Upload,
+  Map,
   LucideIcon
 } from 'lucide-react'
 import { 
@@ -42,7 +43,7 @@ export default function Dashboard() {
     Upload,
     TrendingUp,
     Shield,
-    Map: FileText
+    Map
   } as const
 
   useEffect(() => {

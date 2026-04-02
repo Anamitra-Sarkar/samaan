@@ -23,6 +23,7 @@ from schemas.credit import (
 from routers.auth import get_current_active_user, verify_role
 from ml.credit_model import compute_composite_score, build_feature_vector, get_credit_model
 from ml.shap_explainer import explain_features
+from utils.notification_utils import create_notification
 
 router = APIRouter()
 
@@ -103,6 +104,16 @@ async def _rescore_beneficiary(beneficiary_id: int, db: Session) -> CreditScore:
     db.add(score)
     db.commit()
     db.refresh(score)
+    create_notification(
+        db,
+        user_id=beneficiary_id,
+        title="Credit score updated",
+        message=f"Your latest credit score is {score.composite_score:.1f}.",
+        kind="info" if score.composite_score < 75 else "success",
+        link_path="/credit/scores",
+        entity_type="credit_score",
+        entity_id=score.id,
+    )
     return score
 
 
@@ -177,6 +188,16 @@ async def apply_for_lending(
     db.add(application)
     db.commit()
     db.refresh(application)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Lending application submitted",
+        message="Your direct lending application was submitted successfully.",
+        kind="info",
+        link_path="/credit/lending",
+        entity_type="lending_application",
+        entity_id=application.id,
+    )
     return application
 
 
@@ -214,6 +235,16 @@ async def lending_decision(
         application.approval_notes = None
     db.commit()
     db.refresh(application)
+    create_notification(
+        db,
+        user_id=application.beneficiary_id,
+        title=f"Lending application {application.status}",
+        message="Your lending application has been reviewed.",
+        kind="success" if application.status == "approved" else "warning",
+        link_path="/credit/lending",
+        entity_type="lending_application",
+        entity_id=application.id,
+    )
     return application
 
 

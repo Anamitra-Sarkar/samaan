@@ -25,6 +25,7 @@ from schemas.dbt import (
     DBTDashboardResponse,
 )
 from routers.auth import get_current_active_user, verify_role
+from utils.notification_utils import create_notification
 
 router = APIRouter()
 
@@ -51,6 +52,16 @@ async def register_victim(
     db.add(victim)
     db.commit()
     db.refresh(victim)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Victim registered",
+        message=f"Victim {victim.name} was registered successfully.",
+        kind="success",
+        link_path="/dbt/victims",
+        entity_type="victim",
+        entity_id=victim.id,
+    )
     return victim
 
 
@@ -90,6 +101,16 @@ async def create_case(
     db.add(case)
     db.commit()
     db.refresh(case)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="DBT case created",
+        message=f"Case #{case.id} is now under review.",
+        kind="info",
+        link_path=f"/dbt/case/{case.id}",
+        entity_type="dbt_case",
+        entity_id=case.id,
+    )
     return case
 
 
@@ -122,6 +143,16 @@ async def sanction_case(case_id: int, payload: dict, current_user: User = Depend
     case.status = DBTStatus.SANCTIONED
     db.commit()
     db.refresh(case)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="DBT case sanctioned",
+        message=f"Case #{case.id} was sanctioned successfully.",
+        kind="success",
+        link_path=f"/dbt/case/{case.id}",
+        entity_type="dbt_case",
+        entity_id=case.id,
+    )
     return case
 
 
@@ -143,6 +174,16 @@ async def disburse_case(
     db.add(disbursement)
     db.commit()
     db.refresh(disbursement)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="DBT disbursement completed",
+        message=f"Transaction {ref} was recorded successfully.",
+        kind="success",
+        link_path=f"/dbt/case/{case.id}",
+        entity_type="disbursement",
+        entity_id=disbursement.id,
+    )
     return disbursement
 
 
@@ -171,6 +212,16 @@ async def submit_grievance(payload: GrievanceCreate, current_user: User = Depend
     db.add(grievance)
     db.commit()
     db.refresh(grievance)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Grievance submitted",
+        message=f"Grievance #{grievance.id} has been logged.",
+        kind="info",
+        link_path="/dbt/grievance",
+        entity_type="grievance",
+        entity_id=grievance.id,
+    )
     return grievance
 
 
@@ -191,6 +242,16 @@ async def resolve_grievance(grievance_id: int, payload: dict, current_user: User
     grievance.resolved_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(grievance)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Grievance resolved",
+        message=f"Grievance #{grievance.id} has been resolved.",
+        kind="success",
+        link_path="/dbt/grievance",
+        entity_type="grievance",
+        entity_id=grievance.id,
+    )
     return grievance
 
 

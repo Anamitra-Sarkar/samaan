@@ -23,6 +23,7 @@ from schemas.agency import (
     AgencyDashboardResponse,
 )
 from routers.auth import get_current_active_user, verify_role
+from utils.notification_utils import create_notification
 
 router = APIRouter()
 
@@ -56,6 +57,16 @@ async def register_agency(
     db.add(agency)
     db.commit()
     db.refresh(agency)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Agency registered",
+        message=f"{agency.name} has been added to the registry.",
+        kind="success",
+        link_path="/agency/directory",
+        entity_type="agency",
+        entity_id=agency.id,
+    )
     return agency
 
 
@@ -130,6 +141,16 @@ async def create_mapping(
     db.add(mapping)
     db.commit()
     db.refresh(mapping)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Agency mapping created",
+        message="A new agency responsibility mapping was saved.",
+        kind="success",
+        link_path="/agency/accountability",
+        entity_type="agency_mapping",
+        entity_id=mapping.id,
+    )
     return mapping
 
 
@@ -144,6 +165,16 @@ async def create_fund_allocation(
     db.add(allocation)
     db.commit()
     db.refresh(allocation)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Fund allocation recorded",
+        message=f"Allocation of ₹{payload.total_allocated:,.2f} was saved.",
+        kind="success",
+        link_path="/agency/fund-flow",
+        entity_type="fund_allocation",
+        entity_id=allocation.id,
+    )
     return allocation
 
 
@@ -196,4 +227,14 @@ async def update_milestone(
         milestone.remarks = payload["remarks"]
     db.commit()
     db.refresh(milestone)
+    create_notification(
+        db,
+        user_id=current_user.id,
+        title="Milestone updated",
+        message=f"Milestone #{milestone.id} has been updated.",
+        kind="info",
+        link_path="/agency/accountability",
+        entity_type="milestone",
+        entity_id=milestone.id,
+    )
     return milestone

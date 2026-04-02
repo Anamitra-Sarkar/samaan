@@ -33,8 +33,8 @@ const navItems: NavItem[] = [
     icon: Upload,
     path: '/loan',
     subItems: [
-      { label: 'Upload Proof', path: '/loan/upload', roles: ['beneficiary', 'admin'] },
-      { label: 'Review Queue', path: '/loan/review', roles: ['state_officer', 'admin'] },
+      { label: 'Upload Proof', path: '/loan/beneficiary-upload', roles: ['beneficiary', 'admin'] },
+      { label: 'Review Queue', path: '/loan/officer-review', roles: ['state_officer', 'admin'] },
       { label: 'Data Entry', path: '/loan/data-entry', roles: ['state_officer', 'admin'] },
     ]
   },
@@ -43,9 +43,9 @@ const navItems: NavItem[] = [
     icon: TrendingUp,
     path: '/credit',
     subItems: [
-      { label: 'Credit Scores', path: '/credit/scores' },
-      { label: 'Consumption Entry', path: '/credit/consumption', roles: ['beneficiary', 'admin'] },
-      { label: 'Direct Lending', path: '/credit/lending', roles: ['bank_officer', 'admin'] },
+      { label: 'Credit Scores', path: '/credit/credit-score' },
+      { label: 'Consumption Entry', path: '/credit/consumption-entry', roles: ['beneficiary', 'admin'] },
+      { label: 'Direct Lending', path: '/credit/direct-lending', roles: ['bank_officer', 'admin'] },
     ]
   },
   {
@@ -54,7 +54,7 @@ const navItems: NavItem[] = [
     path: '/village',
     subItems: [
       { label: 'Village Map', path: '/village/map' },
-      { label: 'Gap Reports', path: '/village/list' },
+      { label: 'Gap Reports', path: '/village/gap-report' },
     ]
   },
   {
@@ -64,7 +64,7 @@ const navItems: NavItem[] = [
     subItems: [
       { label: 'Directory', path: '/agency/directory' },
       { label: 'Fund Flow', path: '/agency/fund-flow' },
-      { label: 'Accountability', path: '/agency/accountability' },
+      { label: 'Mapping', path: '/agency/mapping' },
     ]
   },
   {
@@ -72,9 +72,9 @@ const navItems: NavItem[] = [
     icon: Shield,
     path: '/dbt',
     subItems: [
-      { label: 'Victim Registry', path: '/dbt/victims' },
-      { label: 'Disbursements', path: '/dbt/cases' },
-      { label: 'Grievances', path: '/dbt/grievance' },
+      { label: 'DBT Checker', path: '/dbt/checker' },
+      { label: 'Social Pension', path: '/dbt/social-pension' },
+      { label: 'DBT Schemes', path: '/dbt/schemes' },
     ]
   },
 ]

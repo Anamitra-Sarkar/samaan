@@ -6,7 +6,7 @@ import type { CSSProperties } from 'react'
 
 export default function Layout() {
   const sidebarCollapsed = useUIStore((state) => state.sidebarCollapsed)
-  const sidebarWidth = sidebarCollapsed ? '5rem' : '17.5rem'
+  const sidebarWidth = sidebarCollapsed ? '5rem' : '15rem'
   const layoutStyle = {
     '--sidebar-width': sidebarWidth,
   } as CSSProperties

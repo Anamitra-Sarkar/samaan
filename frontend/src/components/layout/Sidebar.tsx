@@ -117,8 +117,8 @@ export default function Sidebar() {
         fixed left-0 top-0 h-screen bg-[#01696f] text-white overflow-visible z-40
         transition-transform duration-300 ease-in-out
         flex flex-col
-        w-[280px] lg:w-auto
-        ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-[280px]'}
+        w-[240px] lg:w-auto
+        ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-[240px]'}
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className={`relative border-b border-white/20 ${sidebarCollapsed ? 'p-4' : 'p-6'}`}>

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useAuthStore } from '../store/authStore'
 import { useNavigate } from 'react-router-dom'
 import { Landmark, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const loginSchema = z.object({
   mobile: z.string().length(10, 'Mobile number must be 10 digits').regex(/^\d+$/, 'Must contain only numbers'),
@@ -12,14 +13,6 @@ const loginSchema = z.object({
 })
 
 type LoginForm = z.infer<typeof loginSchema>
-
-// Demo credentials
-const demoCredentials = [
-  { role: 'Admin', mobile: '9999999999', password: 'admin123' },
-  { role: 'Beneficiary', mobile: '8888888888', password: 'user123' },
-  { role: 'State Officer', mobile: '7777777777', password: 'officer123' },
-  { role: 'Bank Officer', mobile: '6666666666', password: 'bank123' },
-]
 
 export default function Login() {
   const { login, isLoading, error, clearError } = useAuthStore()
@@ -29,7 +22,6 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -46,11 +38,6 @@ export default function Login() {
       else if (role === 'bank_officer') navigate('/credit/scores')
       else navigate('/dashboard')
     }
-  }
-
-  const fillDemoCredentials = (mobile: string, password: string) => {
-    setValue('mobile', mobile)
-    setValue('password', password)
   }
 
   return (
@@ -124,22 +111,13 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm font-medium text-gray-700 mb-3 text-center">Demo Credentials</p>
-            <div className="grid grid-cols-2 gap-2">
-              {demoCredentials.map((demo) => (
-                <button
-                  key={demo.role}
-                  onClick={() => fillDemoCredentials(demo.mobile, demo.password)}
-                  className="text-xs bg-gray-50 hover:bg-[#01696f] hover:text-white border border-gray-200 py-2 px-3 rounded transition-all text-left"
-                >
-                  <span className="font-semibold">{demo.role}</span>
-                  <br />
-                  <span className="text-gray-500 hover:text-white/70">{demo.mobile}</span>
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-gray-400 text-center mt-3">Click any card to auto-fill credentials</p>
+          <div className="mt-8 pt-6 border-t border-gray-200 space-y-3">
+            <p className="text-sm text-gray-600 text-center">
+              Sign in with your registered mobile number and password.
+            </p>
+            <p className="text-sm text-center">
+              First time here? <Link to="/register" className="font-semibold text-[#01696f]">Create an account</Link>
+            </p>
           </div>
         </div>
 

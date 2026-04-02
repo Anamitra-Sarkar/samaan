@@ -7,6 +7,7 @@ import Layout from './components/layout/Layout'
 
 // Pages
 import Login from './pages/Login'
+import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 
 import BeneficiaryUpload from './pages/loan/BeneficiaryUpload'
@@ -53,9 +54,10 @@ function App() {
   }, [initializeAuth])
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={
           <ProtectedRoute>
             <Layout />

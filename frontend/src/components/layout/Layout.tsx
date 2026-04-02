@@ -1,15 +1,17 @@
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
+import { useUIStore } from '../../store/uiStore'
 
 export default function Layout() {
+  const sidebarCollapsed = useUIStore((state) => state.sidebarCollapsed)
   return (
     <div className="min-h-screen bg-[#f7f6f2] flex">
       <Sidebar />
-      <div className="flex-1 flex flex-col ml-0 lg:ml-[280px]">
+      <div className={`flex-1 flex flex-col ml-0 transition-[margin] duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-[280px]'}`}>
         <Topbar />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="content-max-width mx-auto">
+        <main className="flex-1 p-4 sm:p-6 overflow-auto">
+          <div className="content-max-width mx-auto w-full">
             <Outlet />
           </div>
         </main>

@@ -136,8 +136,8 @@ async def get_review_queue(
 ):
     """Officer gets pending proofs for review"""
     verify_role(current_user, [UserRole.STATE_OFFICER, UserRole.ADMIN])
-    
-    query = db.query(LoanProof).join(User).join(LoanRecord).filter(
+
+    query = db.query(LoanProof).join(LoanProof.loan_record).join(LoanProof.beneficiary).filter(
         LoanProof.ai_validation_status.in_([
             LoanProofValidationStatus.PENDING,
             LoanProofValidationStatus.MANUAL_REVIEW

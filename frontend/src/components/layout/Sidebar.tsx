@@ -1,20 +1,17 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { useUIStore } from '../../store/uiStore'
 import { 
   LayoutDashboard, 
   Upload, 
-  FileCheck, 
-  ClipboardList,
   TrendingUp,
-  Wallet,
   Map,
-  Building2,
-  Users,
-  AlertCircle,
-  Menu,
   X,
+  Menu,
   Landmark,
-  Shield
+  Shield,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -82,9 +79,14 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   const { user } = useAuthStore()
+  const { sidebarCollapsed, toggleSidebar } = useUIStore()
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const [expandedSections, setExpandedSections] = useState<string[]>(['Loan Tracking', 'Credit Scoring', 'Village Gaps', 'Agency Mapping', 'DBT Tracking'])
+
+  const mobileClose = () => {
+    setIsOpen(false)
+  }
 
   const toggleSection = (label: string) => {
     setExpandedSections(prev => 
@@ -107,46 +109,65 @@ export default function Sidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-[#01696f] text-white p-2 rounded-md shadow-lg"
+        className="fixed top-4 left-4 z-50 lg:hidden bg-[#01696f] text-white p-2 rounded-full shadow-lg"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
 
       {/* Sidebar */}
       <aside className={`
-        fixed left-0 top-0 h-screen w-[280px] bg-[#01696f] text-white overflow-y-auto z-40
+        fixed left-0 top-0 h-screen bg-[#01696f] text-white overflow-hidden z-40
         transition-transform duration-300 ease-in-out
+        flex flex-col
+        w-[280px] lg:w-auto
+        ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-[280px]'}
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-6 border-b border-white/20">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Landmark className="h-8 w-8 text-[#d19900]" />
-            SAMAAN
-          </h1>
-          <p className="text-sm text-white/70 mt-1">Empowering the Marginalized through Transparent Governance</p>
+        <div className={`relative border-b border-white/20 ${sidebarCollapsed ? 'p-4' : 'p-6'} pr-12`}>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className={`font-bold flex items-center gap-2 min-w-0 ${sidebarCollapsed ? 'text-lg' : 'text-2xl'}`}>
+              <Landmark className="h-8 w-8 text-[#d19900] shrink-0" />
+              {!sidebarCollapsed && <span className="truncate">SAMAAN</span>}
+            </h1>
+            <button
+              onClick={() => {
+                toggleSidebar()
+                setIsOpen(false)
+              }}
+              className="hidden lg:inline-flex absolute -right-4 top-1/2 -translate-y-1/2 h-9 w-9 items-center justify-center rounded-full bg-white text-[#01696f] shadow-lg border border-white/20 hover:scale-105 transition-transform"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            </button>
+          </div>
+          {!sidebarCollapsed && (
+            <p className="text-sm text-white/70 mt-2">Empowering the Marginalized through Transparent Governance</p>
+          )}
         </div>
 
-        <nav className="p-4">
+        <nav className={`flex-1 overflow-y-auto p-4 ${sidebarCollapsed ? 'space-y-2 pb-28' : 'pb-32'}`}>
           {navItems.filter(hasAccess).map((item) => (
-            <div key={item.label} className="mb-2">
+            <div key={item.label} className="mb-2 last:mb-0">
               {item.subItems ? (
                 <div>
                   <button
                     onClick={() => toggleSection(item.label)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
                       ${isActive(item.path) ? 'bg-white/20' : 'hover:bg-white/10'}
+                      ${sidebarCollapsed ? 'justify-center' : ''}
                     `}
                   >
                     <item.icon className="h-5 w-5" />
-                    <span className="font-medium">{item.label}</span>
+                    {!sidebarCollapsed && <span className="font-medium">{item.label}</span>}
                   </button>
-                  {expandedSections.includes(item.label) && (
+                  {!sidebarCollapsed && expandedSections.includes(item.label) && (
                     <div className="ml-4 mt-1 space-y-1">
                       {item.subItems.filter(hasAccess).map((subItem) => (
                         <NavLink
                           key={subItem.path}
                           to={subItem.path}
-                          onClick={() => setIsOpen(false)}
+                          onClick={mobileClose}
                           className={({ isActive }) => `
                             flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-sm
                             ${isActive ? 'bg-[#d19900] text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}
@@ -161,24 +182,25 @@ export default function Sidebar() {
               ) : (
                 <NavLink
                   to={item.path}
-                  onClick={() => setIsOpen(false)}
+                  onClick={mobileClose}
                   className={({ isActive }) => `
                     flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                    ${sidebarCollapsed ? 'justify-center' : ''}
                     ${isActive ? 'bg-[#d19900] text-white' : 'hover:bg-white/10'}
                   `}
                 >
                   <item.icon className="h-5 w-5" />
-                  <span className="font-medium">{item.label}</span>
+                  {!sidebarCollapsed && <span className="font-medium">{item.label}</span>}
                 </NavLink>
               )}
             </div>
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/20">
-          <div className="px-4 py-2">
-            <p className="text-xs text-white/50">Authenticated as</p>
-            <p className="font-medium capitalize">{user?.role.replace('_', ' ')}</p>
+        <div className="shrink-0 p-4 border-t border-white/20 bg-[#01696f]">
+          <div className={`${sidebarCollapsed ? 'px-2 py-2 text-center' : 'px-4 py-2'} rounded-xl bg-white/5`}>
+            <p className={`text-xs text-white/50 ${sidebarCollapsed ? 'hidden' : ''}`}>Authenticated as</p>
+            <p className="font-medium capitalize text-sm">{sidebarCollapsed ? user?.role?.[0]?.toUpperCase() : user?.role?.replace('_', ' ')}</p>
           </div>
         </div>
       </aside>

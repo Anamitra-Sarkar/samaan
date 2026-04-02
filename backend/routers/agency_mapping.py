@@ -59,34 +59,6 @@ async def register_agency(
     return agency
 
 
-@router.get("/{agency_id}")
-async def get_agency(agency_id: int, current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    agency = db.query(Agency).filter(Agency.id == agency_id).first()
-    if agency is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agency not found")
-    mappings = db.query(AgencyMapping).filter(AgencyMapping.agency_id == agency_id).all()
-    milestones = db.query(ProjectMilestone).join(AgencyMapping).filter(AgencyMapping.agency_id == agency_id).all()
-    return {
-        "agency": AgencyResponse.model_validate(agency).model_dump(),
-        "mappings": [AgencyMappingResponse.model_validate(m).model_dump() for m in mappings],
-        "milestones": [ProjectMilestoneResponse.model_validate(m).model_dump() for m in milestones],
-    }
-
-
-@router.post("/mapping", response_model=AgencyMappingResponse)
-async def create_mapping(
-    payload: AgencyMappingCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
-):
-    verify_role(current_user, [UserRole.ADMIN, UserRole.STATE_OFFICER])
-    mapping = AgencyMapping(**payload.model_dump())
-    db.add(mapping)
-    db.commit()
-    db.refresh(mapping)
-    return mapping
-
-
 @router.get("/mapping/dashboard")
 async def mapping_dashboard(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
     mappings = db.query(AgencyMapping).all()
@@ -102,20 +74,6 @@ async def mapping_dashboard(current_user: User = Depends(get_current_active_user
         "by_component": dict(by_component),
         "by_state": dict(by_state),
     }
-
-
-@router.post("/fund-allocation", response_model=FundAllocationResponse)
-async def create_fund_allocation(
-    payload: FundAllocationCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
-):
-    verify_role(current_user, [UserRole.ADMIN, UserRole.STATE_OFFICER])
-    allocation = FundAllocation(mapping_id=payload.mapping_id, total_allocated=payload.total_allocated, financial_year=payload.financial_year)
-    db.add(allocation)
-    db.commit()
-    db.refresh(allocation)
-    return allocation
 
 
 @router.get("/fund-flow")
@@ -145,6 +103,48 @@ async def fund_flow(current_user: User = Depends(get_current_active_user), db: S
         "by_component": dict(by_component),
         "allocations": len(allocations),
     }
+
+
+@router.get("/{agency_id}")
+async def get_agency(agency_id: int, current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    agency = db.query(Agency).filter(Agency.id == agency_id).first()
+    if agency is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agency not found")
+    mappings = db.query(AgencyMapping).filter(AgencyMapping.agency_id == agency_id).all()
+    milestones = db.query(ProjectMilestone).join(AgencyMapping).filter(AgencyMapping.agency_id == agency_id).all()
+    return {
+        "agency": AgencyResponse.model_validate(agency).model_dump(),
+        "mappings": [AgencyMappingResponse.model_validate(m).model_dump() for m in mappings],
+        "milestones": [ProjectMilestoneResponse.model_validate(m).model_dump() for m in milestones],
+    }
+
+
+@router.post("/mapping", response_model=AgencyMappingResponse)
+async def create_mapping(
+    payload: AgencyMappingCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    verify_role(current_user, [UserRole.ADMIN, UserRole.STATE_OFFICER])
+    mapping = AgencyMapping(**payload.model_dump())
+    db.add(mapping)
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.post("/fund-allocation", response_model=FundAllocationResponse)
+async def create_fund_allocation(
+    payload: FundAllocationCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    verify_role(current_user, [UserRole.ADMIN, UserRole.STATE_OFFICER])
+    allocation = FundAllocation(mapping_id=payload.mapping_id, total_allocated=payload.total_allocated, financial_year=payload.financial_year)
+    db.add(allocation)
+    db.commit()
+    db.refresh(allocation)
+    return allocation
 
 
 @router.get("/accountability-matrix")

@@ -1,9 +1,11 @@
 import { useAuthStore } from '../../store/authStore'
-import { LogOut, User, Bell } from 'lucide-react'
+import { LogOut, User, Bell, PanelLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useUIStore } from '../../store/uiStore'
 
 export default function Topbar() {
   const { user, logout } = useAuthStore()
+  const { toggleSidebar } = useUIStore()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -12,9 +14,17 @@ export default function Topbar() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <h2 className="text-lg font-semibold text-gray-800 hidden md:block">
+    <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          onClick={toggleSidebar}
+          className="hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+          aria-label="Toggle sidebar"
+          title="Toggle sidebar"
+        >
+          <PanelLeft className="h-5 w-5 text-gray-700" />
+        </button>
+        <h2 className="text-lg font-semibold text-gray-800 hidden md:block truncate">
           Ministry of Social Justice & Empowerment
         </h2>
       </div>

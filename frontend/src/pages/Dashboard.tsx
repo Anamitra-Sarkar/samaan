@@ -6,7 +6,6 @@ import {
   FileText, 
   TrendingUp, 
   Shield,
-  AlertCircle,
   CheckCircle,
   Clock,
   Upload,
@@ -22,9 +21,7 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  LineChart,
-  Line
+  Cell
 } from 'recharts'
 
 export default function Dashboard() {
@@ -40,6 +37,13 @@ export default function Dashboard() {
     fundUtilization: { allocated: 0, released: 0, utilized: 0 }
   })
   const [loading, setLoading] = useState(true)
+  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([])
+  const activityIcons = {
+    Upload,
+    TrendingUp,
+    Shield,
+    Map: FileText
+  } as const
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -50,6 +54,7 @@ export default function Dashboard() {
           client.get('/dbt/dashboard')
         ])
         const agencyFlow = await client.get('/agency/fund-flow')
+        const activity = await client.get('/activity/recent')
 
         setStats({
           totalBeneficiaries: creditStats.data.total_beneficiaries || 0,
@@ -66,6 +71,7 @@ export default function Dashboard() {
           monthlySubmissions: loanStats.data.monthly_submissions || [],
           fundUtilization: agencyFlow.data.totals || { allocated: 0, released: 0, utilized: 0 }
         })
+        setRecentActivity(activity.data.items || [])
       } catch (error) {
         console.error('Failed to fetch stats:', error)
       } finally {
@@ -92,7 +98,7 @@ export default function Dashboard() {
           <p className="text-gray-500">Welcome back, {user?.name}</p>
         </div>
         <span className="px-3 py-1 bg-[#01696f]/10 text-[#01696f] rounded-full text-sm font-medium capitalize">
-          {user?.role.replace('_', ' ')} View
+          {user?.role?.replace('_', ' ')} View
         </span>
       </div>
 
@@ -243,35 +249,19 @@ export default function Dashboard() {
       {/* Recent Activity */}
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-        <div className="space-y-3">
-          <ActivityItem 
-            icon={Upload}
-            title="Loan proof uploaded"
-            description="Rajesh Kumar uploaded proof for Loan #1234"
-            time="2 hours ago"
-            status="success"
-          />
-          <ActivityItem 
-            icon={AlertCircle}
-            title="High risk case flagged"
-            description="Credit scoring detected high risk beneficiary"
-            time="4 hours ago"
-            status="warning"
-          />
-          <ActivityItem 
-            icon={CheckCircle}
-            title="DBT disbursed"
-            description="₹50,000 disbursed to victim case #567"
-            time="5 hours ago"
-            status="success"
-          />
-          <ActivityItem 
-            icon={FileText}
-            title="Gap report generated"
-            description="Village gap analysis completed for District X"
-            time="1 day ago"
-            status="info"
-          />
+          <div className="space-y-3">
+          {recentActivity.length === 0 ? (
+            <p className="text-sm text-gray-500">No recent activity yet.</p>
+          ) : recentActivity.map((item) => (
+            <ActivityItem
+              key={`${item.source}-${item.id}`}
+              icon={activityIcons[item.icon] || FileText}
+              title={item.title}
+              description={item.description}
+              time={item.time_ago}
+              status={item.status}
+            />
+          ))}
         </div>
       </div>
     </div>
@@ -347,4 +337,14 @@ function ActivityItem({
       <span className="text-xs text-gray-400">{time}</span>
     </div>
   )
+}
+
+type RecentActivityItem = {
+  source: string
+  id: number
+  icon: 'Upload' | 'TrendingUp' | 'Shield' | 'Map'
+  title: string
+  description: string
+  time_ago: string
+  status: 'success' | 'warning' | 'info'
 }

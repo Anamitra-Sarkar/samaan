@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { client } from '../../api/client'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 type Village = {
   id: number
   name: string
@@ -37,6 +39,7 @@ const statusStyles: Record<string, string> = {
 }
 
 export default function VillageDetail() {
+  usePageTitle('Village Detail')
   const { id } = useParams()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

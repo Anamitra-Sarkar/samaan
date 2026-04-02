@@ -67,7 +67,7 @@ class DBTCaseResponse(BaseModel):
 
 class DisbursementCreate(BaseModel):
     """Schema for disbursement creation"""
-    case_id: int
+    case_id: Optional[int] = None
     amount: Optional[float] = Field(None, gt=0)
     bank_account_last4: Optional[str] = None
     remarks: Optional[str] = None

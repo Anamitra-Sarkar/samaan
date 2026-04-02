@@ -15,3 +15,5 @@ pandas
 geopy
 folium
 pydantic[email]
+huggingface_hub
+ultralytics

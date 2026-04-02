@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { client } from '../../api/client'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 const states = ['Uttar Pradesh', 'Bihar', 'Rajasthan', 'Madhya Pradesh', 'Maharashtra', 'Other'] as const
 
 const registerSchema = z.object({
@@ -50,6 +52,7 @@ type VerificationResult = {
 }
 
 export default function VictimRegistry() {
+  usePageTitle('Victim Registry')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [rows, setRows] = useState<VictimRow[]>([])

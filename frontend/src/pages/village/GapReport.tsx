@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { client } from '../../api/client'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 type Row = {
   village: {
     id: number
@@ -19,6 +21,7 @@ type Row = {
 }
 
 export default function GapReport() {
+  usePageTitle('Village Gap Reports')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [rows, setRows] = useState<Row[]>([])

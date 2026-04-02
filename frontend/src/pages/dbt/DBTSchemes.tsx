@@ -3,7 +3,10 @@ import { client } from '../../api/client'
 import DataTable from '../../components/shared/DataTable'
 import { Link } from 'react-router-dom'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 export default function DBTSchemes() {
+  usePageTitle('DBT Cases')
   const [items, setItems] = useState<any[]>([])
   const [stats, setStats] = useState<any>(null)
 

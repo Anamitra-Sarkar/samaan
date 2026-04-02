@@ -1,15 +1,15 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useUIStore } from '../../store/uiStore'
-import { 
+import {
   LayoutDashboard, 
   Upload, 
   TrendingUp,
   Map,
   X,
   Menu,
+  Shield,
   Landmark,
-  Shield
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -127,8 +127,22 @@ export default function Sidebar() {
       `}>
         <div className={`relative border-b border-white/20 ${sidebarCollapsed ? 'p-4' : 'p-6'}`}>
           <div className="flex items-center gap-3 min-w-0">
-            <h1 className={`font-bold flex items-center gap-2 min-w-0 ${sidebarCollapsed ? 'text-lg' : 'text-2xl'}`}>
-              <Landmark className="h-8 w-8 text-[#d19900] shrink-0" />
+            <h1 className={`font-bold flex items-center gap-3 min-w-0 ${sidebarCollapsed ? 'text-lg' : 'text-2xl'}`}>
+              <svg
+                viewBox="0 0 40 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className={`${sidebarCollapsed ? 'h-8 w-8' : 'h-10 w-10'} shrink-0`}
+                aria-hidden="true"
+              >
+                <rect x="2.5" y="2.5" width="35" height="35" rx="11" fill="#F7F6F2" />
+                <path d="M9 26.5C12.2 18.8 15.5 15 20 15s7.8 3.8 11 11.5" stroke="#01696f" strokeWidth="3" strokeLinecap="round" />
+                <path d="M11 26.5H29" stroke="#01696f" strokeWidth="3" strokeLinecap="round" />
+                <path d="M14.5 26.5V22M20 26.5V18.8M25.5 26.5V22" stroke="#01696f" strokeWidth="2.5" strokeLinecap="round" />
+                <circle cx="14.5" cy="22" r="2.3" fill="#d19900" />
+                <circle cx="25.5" cy="22" r="2.3" fill="#d19900" />
+                <path d="M8.5 31.5H31.5" stroke="#01696f" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
               {!sidebarCollapsed && <span className="truncate">SAMAAN</span>}
             </h1>
           </div>

@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { client } from '../../api/client'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 const states = ['Uttar Pradesh', 'Bihar', 'Rajasthan', 'Madhya Pradesh', 'Maharashtra', 'Other'] as const
 
 const schema = z.object({
@@ -20,6 +22,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 
 export default function LoanDataEntry() {
+  usePageTitle('Loan Data Entry')
   const [toast, setToast] = useState<string | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
 

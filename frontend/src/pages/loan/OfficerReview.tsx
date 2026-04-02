@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { client } from '../../api/client'
 import ScoreBadge from '../../components/shared/ScoreBadge'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 export default function OfficerReview() {
+  usePageTitle('Loan Review Queue')
   const [proofs, setProofs] = useState<any[]>([])
   const [notes, setNotes] = useState<Record<number, string>>({})
   const [statusFilter, setStatusFilter] = useState('')

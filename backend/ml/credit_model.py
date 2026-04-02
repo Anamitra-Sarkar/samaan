@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Tuple
@@ -18,6 +19,7 @@ from ml.shap_explainer import compute_shap_explanation
 
 MODEL_PATH = Path(os.getenv("SAMAAN_CREDIT_MODEL_PATH", "/data/credit_model.pkl"))
 FALLBACK_MODEL_PATH = Path("/tmp/samaan-credit-model.pkl")
+HF_MODEL_REPO = os.getenv("SAMAAN_HF_MODEL_REPO", "")
 MODEL_VERSION = "1.0.0"
 
 FEATURE_COLUMNS = [
@@ -110,21 +112,35 @@ class CreditModelService:
 
     @classmethod
     def load_or_train(cls) -> "CreditModelService":
-        path = MODEL_PATH
-        if not path.parent.exists():
-            path = FALLBACK_MODEL_PATH
-        if path.exists():
-            return cls(joblib.load(path))
+        if MODEL_PATH.exists():
+            return cls(joblib.load(MODEL_PATH))
 
-        X, y = _synthetic_training_frame()
+        if HF_MODEL_REPO:
+            try:
+                from huggingface_hub import hf_hub_download
+
+                local_path = hf_hub_download(repo_id=HF_MODEL_REPO, filename="credit_model.pkl")
+                pipeline = joblib.load(local_path)
+                try:
+                    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy(local_path, MODEL_PATH)
+                except Exception:
+                    pass
+                return cls(pipeline)
+            except Exception:
+                pass
+
+        X, y = _synthetic_training_frame(500)
         pipeline = _build_pipeline()
         pipeline.fit(X, y)
         try:
-            path.parent.mkdir(parents=True, exist_ok=True)
-        except PermissionError:
-            path = FALLBACK_MODEL_PATH
-            path.parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump(pipeline, path)
+            save_path = MODEL_PATH if MODEL_PATH.parent.exists() else FALLBACK_MODEL_PATH
+            save_path.parent.mkdir(parents=True, exist_ok=True)
+            joblib.dump(pipeline, save_path)
+        except Exception:
+            fallback = FALLBACK_MODEL_PATH
+            fallback.parent.mkdir(parents=True, exist_ok=True)
+            joblib.dump(pipeline, fallback)
         return cls(pipeline)
 
     def predict_proba(self, features: Dict) -> np.ndarray:

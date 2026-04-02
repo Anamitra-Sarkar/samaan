@@ -5,6 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { client } from '../../api/client'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 const schema = z.object({
   electricity_units_monthly: z.coerce.number().optional(),
   mobile_recharge_monthly_avg: z.coerce.number().optional(),
@@ -16,6 +18,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 
 export default function ConsumptionEntry() {
+  usePageTitle('Consumption Entry')
   const { user } = useAuthStore()
   const [result, setResult] = useState<any>(null)
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<Values>({

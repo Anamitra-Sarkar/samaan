@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { client } from '../../api/client'
 import ScoreBadge from '../../components/shared/ScoreBadge'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 export default function DirectLending() {
+  usePageTitle('Direct Lending')
   const [applications, setApplications] = useState<any[]>([])
 
   const refresh = async () => {

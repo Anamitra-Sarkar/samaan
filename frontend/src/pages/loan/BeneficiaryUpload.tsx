@@ -6,6 +6,8 @@ import { client } from '../../api/client'
 import FileUpload from '../../components/shared/FileUpload'
 import { useAuthStore } from '../../store/authStore'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 const schema = z.object({
   loan_id: z.coerce.number().int().positive(),
 })
@@ -13,6 +15,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export default function BeneficiaryUpload() {
+  usePageTitle('Loan Proof Upload')
   const { user } = useAuthStore()
   const [file, setFile] = useState<File | null>(null)
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null)

@@ -1,31 +1,33 @@
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { client } from '../api/client'
-import { 
-  Users, 
-  FileText, 
-  TrendingUp, 
+import {
+  Users,
+  FileText,
+  TrendingUp,
   Shield,
   CheckCircle,
   Clock,
   Upload,
   Map,
-  LucideIcon
+  LucideIcon,
 } from 'lucide-react'
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from 'recharts'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function Dashboard() {
+  usePageTitle('Dashboard')
   const { user } = useAuthStore()
   const [stats, setStats] = useState({
     totalBeneficiaries: 0,

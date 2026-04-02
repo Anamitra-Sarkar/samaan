@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
 import { client } from '../../api/client'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 const sanctionSchema = z.object({
   approved_amount: z.coerce.number().min(1, 'Approved amount is required'),
 })
@@ -30,6 +32,7 @@ type Filters = {
 }
 
 export default function DisbursementTracker() {
+  usePageTitle('Disbursement Tracker')
   const navigate = useNavigate()
   const [filters, setFilters] = useState<Filters>({ status: '', case_type: '', state: '' })
   const [loading, setLoading] = useState(true)

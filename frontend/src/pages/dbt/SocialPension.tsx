@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { client } from '../../api/client'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 const schema = z.object({
   name: z.string().min(2),
   aadhaar_last4: z.string().length(4),
@@ -19,6 +21,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 
 export default function SocialPension() {
+  usePageTitle('Victim Registration')
   const [createdId, setCreatedId] = useState<number | null>(null)
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<Values>({
     resolver: zodResolver(schema),

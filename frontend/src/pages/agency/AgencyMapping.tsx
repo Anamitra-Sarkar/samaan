@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { client } from '../../api/client'
 import DataTable from '../../components/shared/DataTable'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 export default function AgencyMapping() {
+  usePageTitle('Agency Mapping')
   const [items, setItems] = useState<any[]>([])
 
   useEffect(() => {

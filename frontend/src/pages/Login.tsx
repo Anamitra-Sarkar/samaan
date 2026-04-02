@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom'
 import { Landmark, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { usePageTitle } from '../hooks/usePageTitle'
+
 const loginSchema = z.object({
   mobile: z.string().length(10, 'Mobile number must be 10 digits').regex(/^\d+$/, 'Must contain only numbers'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -15,6 +17,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>
 
 export default function Login() {
+  usePageTitle('Login')
   const { login, isLoading, error, clearError } = useAuthStore()
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)

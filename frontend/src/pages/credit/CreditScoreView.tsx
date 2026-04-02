@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { client } from '../../api/client'
 import DataTable from '../../components/shared/DataTable'
 import ScoreBadge from '../../components/shared/ScoreBadge'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 export default function CreditScoreView() {
+  usePageTitle('Beneficiary Credit Scores')
   const [rows, setRows] = useState<any[]>([])
   const [band, setBand] = useState('')
   const [stats, setStats] = useState<any>(null)

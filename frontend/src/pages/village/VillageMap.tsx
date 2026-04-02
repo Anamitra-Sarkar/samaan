@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { client } from '../../api/client'
 import MapView from '../../components/shared/MapView'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 type VillagePoint = {
   id: number
@@ -40,6 +41,7 @@ type VillageListResponseItem = {
 }
 
 export default function VillageMap() {
+  usePageTitle('Village Gap Map')
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

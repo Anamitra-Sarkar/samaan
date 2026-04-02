@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { Link } from 'react-router-dom'
 import { client } from '../../api/client'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 const schema = z.object({
   mobile: z.string().regex(/^\d{10}$/, 'Enter a valid 10-digit mobile number'),
 })
@@ -25,6 +27,7 @@ type CaseRow = {
 }
 
 export default function DBTChecker() {
+  usePageTitle('DBT Checker')
   const [cases, setCases] = useState<CaseRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

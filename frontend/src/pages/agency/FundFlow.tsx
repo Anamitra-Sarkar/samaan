@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { client } from '../../api/client'
 
+import { usePageTitle } from '../../hooks/usePageTitle'
+
 export default function FundFlow() {
+  usePageTitle('Fund Flow')
   const [data, setData] = useState<any>(null)
   const [dashboard, setDashboard] = useState<any>(null)
 

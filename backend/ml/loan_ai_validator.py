@@ -9,6 +9,19 @@ from PIL import Image
 
 from utils.geo_utils import haversine_km
 
+_yolo_model = None
+
+
+def _get_yolo():
+    global _yolo_model
+    if _yolo_model is None:
+        try:
+            from ultralytics import YOLO
+            _yolo_model = YOLO("yolov8n.pt")
+        except Exception:
+            _yolo_model = False
+    return _yolo_model if _yolo_model is not False else None
+
 
 def _extract_exif_gps(path: str) -> tuple[Optional[float], Optional[float]]:
     try:
@@ -55,6 +68,20 @@ def validate_loan_proof(file_path: str, submitted_lat: Optional[float], submitte
         else:
             confidence += 0.15
 
+        yolo = _get_yolo()
+        if yolo is not None:
+            try:
+                results = yolo(str(path), verbose=False)
+                detections = results[0].boxes if results else None
+                if detections is not None and len(detections) > 0:
+                    confidence += 0.15
+                    remarks.append(f"Object detected: {len(detections)} item(s) in frame")
+                else:
+                    confidence -= 0.15
+                    remarks.append("No physical object detected in image")
+            except Exception as yolo_err:
+                remarks.append(f"Object detection skipped: {yolo_err}")
+
         exif_lat, exif_lng = _extract_exif_gps(file_path)
         if submitted_lat is not None and submitted_lng is not None and exif_lat is not None and exif_lng is not None:
             distance = haversine_km(submitted_lat, submitted_lng, exif_lat, exif_lng)
@@ -83,4 +110,3 @@ def validate_loan_proof(file_path: str, submitted_lat: Optional[float], submitte
         "confidence_score": round(confidence, 3),
         "remarks": "; ".join(remarks) if remarks else "Validation passed",
     }
-

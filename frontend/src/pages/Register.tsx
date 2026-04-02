@@ -7,6 +7,8 @@ import { Landmark, AlertCircle } from 'lucide-react'
 import { client } from '../api/client'
 import { useAuthStore } from '../store/authStore'
 
+import { usePageTitle } from '../hooks/usePageTitle'
+
 const registerSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   mobile: z.string().length(10, 'Mobile number must be 10 digits').regex(/^\d+$/, 'Must contain only numbers'),
@@ -19,6 +21,7 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>
 
 export default function Register() {
+  usePageTitle('Register')
   const navigate = useNavigate()
   const { login } = useAuthStore()
   const [serverMessage, setServerMessage] = useState<string | null>(null)

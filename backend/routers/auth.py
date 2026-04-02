@@ -210,30 +210,19 @@ async def refresh_token(refresh_data: RefreshTokenRequest, db: Session = Depends
 
 @router.post("/send-otp")
 async def send_otp(otp_request: OTPRequest):
-    """Send OTP for mobile verification (mock implementation)"""
-    # In production, integrate with SMS provider like Twilio
-    # For now, return a mock OTP
-    return {
-        "message": "OTP sent successfully",
-        "otp": "123456",  # Mock OTP for development
-        "mobile": otp_request.mobile,
-        "note": "Mock implementation - real SMS integration needed in production"
-    }
+    """Send OTP for mobile verification."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="OTP delivery is not configured. Connect a real SMS provider before enabling this endpoint.",
+    )
 
 @router.post("/verify-otp")
 async def verify_otp(otp_data: OTPVerify):
-    """Verify OTP (mock implementation)"""
-    # In production, verify with SMS provider
-    if otp_data.otp == "123456":
-        return {
-            "verified": True,
-            "message": "Mobile number verified successfully"
-        }
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid OTP"
-        )
+    """Verify OTP."""
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="OTP verification is not configured. Connect a real SMS provider before enabling this endpoint.",
+    )
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_active_user)):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from random import Random
@@ -13,6 +14,7 @@ from models.credit import ConsumptionData, LoanRepaymentSummary, CreditScore, Le
 from models.village import Village, InfrastructureItem, InfrastructureCategory, InfrastructureStatus, GapReport
 from models.agency import Agency, AgencyMapping, AgencyType, AgencyRole, PMSAJAYComponent as PMSAJAYComponentModel, FundAllocation, ProjectMilestone, MilestoneStatus
 from models.dbt import Victim, DBTCase, Disbursement, GrievanceTicket, CaseType, AssistanceType, DBTStatus, GrievanceCategory, GrievanceStatus, VerificationStatus
+from models.notification import Notification
 from routers.auth import get_password_hash
 from ml.credit_model import compute_composite_score
 from ml.gap_analyzer import evaluate_village_gap
@@ -39,11 +41,11 @@ def _get_or_create(db, model, defaults=None, **kwargs):
     return obj, True
 
 
-def seed_if_empty() -> None:
+def seed_sample_data() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        if db.query(User).count() > 0:
+        if db.query(User).count() > 0 or os.getenv("SAMAAN_ENABLE_SAMPLE_DATA", "").lower() not in {"1", "true", "yes"}:
             return
 
         rng = Random(42)
@@ -301,7 +303,7 @@ def seed_if_empty() -> None:
             db.add(case)
             db.flush()
             if idx % 2 == 0:
-                db.add(Disbursement(case_id=case.id, amount=case.approved_amount, transaction_ref=f"MOCK-TXN-SEED-{idx}", bank_account_last4="7788", remarks="Seed disbursement"))
+                db.add(Disbursement(case_id=case.id, amount=case.approved_amount, transaction_ref=f"TXN-SEED-{idx}", bank_account_last4="7788", remarks="Seed disbursement"))
                 case.disbursed_amount = case.approved_amount
                 case.status = DBTStatus.DISBURSED
             if idx <= 3:
@@ -312,6 +314,90 @@ def seed_if_empty() -> None:
         db.close()
 
 
+def purge_seed_data() -> None:
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed_user_mobiles = ["9999999999", "7777777777", "7766666666", "6666666666", "8888888888", "8888888887"]
+        seed_agency_names = [
+            "Uttar Pradesh Social Welfare Department",
+            "Bihar Social Welfare Department",
+            "Rajasthan Social Justice Department",
+            "National Scheduled Castes Finance and Development Corporation",
+            "District Rural Development Agency Lucknow",
+            "District Rural Development Agency Patna",
+            "District Rural Development Agency Jaipur",
+            "State Bank of India",
+            "National Institute of Social Defence",
+            "Jan Seva Foundation",
+        ]
+        seed_village_names = ["Barauli", "Sahora", "Khetasar", "Madhopur", "Navapura", "Sundarpur"]
+        seed_victim_mobiles = ["9111111111", "9222222222", "9333333333", "9444444444", "9555555555", "9666666666"]
+
+        seed_user_ids = [user.id for user in db.query(User).filter(User.mobile.in_(seed_user_mobiles)).all()]
+        test_user_ids = [
+            user.id
+            for user in db.query(User).filter(
+                (User.name.like("Test%")) | (User.name.like("Readback%")) | (User.name.like("Notif%"))
+            ).all()
+        ]
+        cleanup_user_ids = list({*seed_user_ids, *test_user_ids})
+        seed_agency_ids = [agency.id for agency in db.query(Agency).filter(Agency.name.in_(seed_agency_names)).all()]
+        seed_village_ids = [village.id for village in db.query(Village).filter(Village.name.in_(seed_village_names)).all()]
+        seed_victim_ids = [victim.id for victim in db.query(Victim).filter(Victim.mobile.in_(seed_victim_mobiles)).all()]
+        test_victim_ids = [
+            victim.id
+            for victim in db.query(Victim).filter(
+                (Victim.name.like("Test%")) | (Victim.name.like("Readback%"))
+            ).all()
+        ]
+        cleanup_victim_ids = list({*seed_victim_ids, *test_victim_ids})
+        seed_case_ids = [case.id for case in db.query(DBTCase).filter(DBTCase.victim_id.in_(cleanup_victim_ids)).all()]
+        seed_mapping_ids = [mapping.id for mapping in db.query(AgencyMapping).filter(AgencyMapping.notes == "Seeded mapping").all()]
+
+        if cleanup_user_ids:
+            db.query(Notification).filter(Notification.user_id.in_(cleanup_user_ids)).delete(synchronize_session=False)
+            db.query(LoanProof).filter(LoanProof.beneficiary_id.in_(cleanup_user_ids)).delete(synchronize_session=False)
+            db.query(LoanRecord).filter(LoanRecord.beneficiary_id.in_(cleanup_user_ids)).delete(synchronize_session=False)
+            db.query(CreditScore).filter(CreditScore.beneficiary_id.in_(cleanup_user_ids)).delete(synchronize_session=False)
+            db.query(ConsumptionData).filter(ConsumptionData.beneficiary_id.in_(cleanup_user_ids)).delete(synchronize_session=False)
+            db.query(LoanRepaymentSummary).filter(LoanRepaymentSummary.beneficiary_id.in_(cleanup_user_ids)).delete(synchronize_session=False)
+            db.query(LendingApplication).filter(LendingApplication.beneficiary_id.in_(cleanup_user_ids)).delete(synchronize_session=False)
+            db.query(BeneficiaryProfile).filter(BeneficiaryProfile.user_id.in_(cleanup_user_ids)).delete(synchronize_session=False)
+            db.query(User).filter(User.id.in_(cleanup_user_ids)).delete(synchronize_session=False)
+
+        if seed_mapping_ids:
+            db.query(ProjectMilestone).filter(ProjectMilestone.mapping_id.in_(seed_mapping_ids)).delete(synchronize_session=False)
+            db.query(FundAllocation).filter(FundAllocation.mapping_id.in_(seed_mapping_ids)).delete(synchronize_session=False)
+            db.query(AgencyMapping).filter(AgencyMapping.id.in_(seed_mapping_ids)).delete(synchronize_session=False)
+
+        if seed_agency_ids:
+            db.query(Agency).filter(Agency.id.in_(seed_agency_ids)).delete(synchronize_session=False)
+
+        if seed_village_ids:
+            db.query(GapReport).filter(GapReport.village_id.in_(seed_village_ids)).delete(synchronize_session=False)
+            db.query(InfrastructureItem).filter(InfrastructureItem.village_id.in_(seed_village_ids)).delete(synchronize_session=False)
+            db.query(Village).filter(Village.id.in_(seed_village_ids)).delete(synchronize_session=False)
+
+        if seed_case_ids:
+            db.query(Disbursement).filter(Disbursement.case_id.in_(seed_case_ids)).delete(synchronize_session=False)
+            db.query(GrievanceTicket).filter(GrievanceTicket.case_id.in_(seed_case_ids)).delete(synchronize_session=False)
+            db.query(DBTCase).filter(DBTCase.id.in_(seed_case_ids)).delete(synchronize_session=False)
+        if cleanup_victim_ids:
+            db.query(Victim).filter(Victim.id.in_(cleanup_victim_ids)).delete(synchronize_session=False)
+
+        db.query(Disbursement).filter(Disbursement.transaction_ref.like("TXN-SEED-%")).delete(synchronize_session=False)
+        db.query(GrievanceTicket).filter(GrievanceTicket.description == "Seed grievance").delete(synchronize_session=False)
+
+        seed_component_names = ["adarsh_gram", "grant_in_aid", "hostel"]
+        db.query(PMSAJAYComponentModel).filter(PMSAJAYComponentModel.name.in_(seed_component_names)).delete(synchronize_session=False)
+        db.commit()
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
-    seed_if_empty()
-    print("Seed data ready")
+    purge_seed_data()
+    if os.getenv("SAMAAN_ENABLE_SAMPLE_DATA", "").lower() in {"1", "true", "yes"}:
+        seed_sample_data()
+    print("Seed data cleanup complete")

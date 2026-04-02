@@ -248,8 +248,8 @@ async def lending_decision(
     return application
 
 
-@router.post("/seed-score/{beneficiary_id}", response_model=CreditScoreResponse)
-async def seed_or_score_beneficiary(
+@router.post("/recalculate/{beneficiary_id}", response_model=CreditScoreResponse)
+async def recalculate_beneficiary_score(
     beneficiary_id: int,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),

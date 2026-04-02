@@ -6,8 +6,9 @@ from database import Base, engine, SessionLocal
 from models import user, loan, credit, village, agency, dbt, notification  # noqa: F401 - register models
 from routers import auth, loan_tracking, credit_scoring, village_gaps, agency_mapping, dbt as dbt_router, activity, notifications
 from ml.credit_model import get_credit_model
-from seed_data import seed_if_empty
+from seed_data import purge_seed_data, seed_sample_data
 from utils.file_utils import ensure_upload_root
+import os
 
 app = FastAPI(title="SAMAAN API", version="1.0.0")
 
@@ -28,5 +29,7 @@ app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 @app.on_event("startup")
 async def startup():
     Base.metadata.create_all(bind=engine)
-    seed_if_empty()
+    purge_seed_data()
+    if os.getenv("SAMAAN_ENABLE_SAMPLE_DATA", "").lower() in {"1", "true", "yes"}:
+        seed_sample_data()
     get_credit_model()

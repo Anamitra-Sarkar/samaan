@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import axios from 'axios'
 
 interface User {
@@ -24,67 +23,46 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      token: null,
-      user: null,
-      isLoading: false,
-      error: null,
+  (set) => ({
+    token: null,
+    user: null,
+    isLoading: false,
+    error: null,
 
-      login: async (mobile: string, password: string) => {
-        set({ isLoading: true, error: null })
-        try {
-          const response = await axios.post(
-            `${import.meta.env.VITE_API_BASE_URL || '/api'}/auth/login`,
-            { mobile, password }
-          )
-          const { access_token } = response.data
-          
-          // Get user info
-          const userResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL || '/api'}/auth/me`, {
-            headers: { Authorization: `Bearer ${access_token}` }
-          })
-          
-          set({ 
-            token: access_token, 
-            user: userResponse.data,
-            isLoading: false 
-          })
-          
-          localStorage.setItem('samaan_token', access_token)
-          localStorage.setItem('samaan_user', JSON.stringify(userResponse.data))
-        } catch (error: any) {
-          set({ 
-            error: error.response?.data?.detail || 'Login failed', 
-            isLoading: false 
-          })
-        }
-      },
+    login: async (mobile: string, password: string) => {
+      set({ isLoading: true, error: null })
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL || '/api'}/auth/login`,
+          { mobile, password }
+        )
+        const { access_token } = response.data
 
-      logout: () => {
-        localStorage.removeItem('samaan_token')
-        localStorage.removeItem('samaan_user')
-        set({ token: null, user: null, error: null })
-      },
+        const userResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL || '/api'}/auth/me`, {
+          headers: { Authorization: `Bearer ${access_token}` }
+        })
 
-      initializeAuth: () => {
-        const token = localStorage.getItem('samaan_token')
-        const userStr = localStorage.getItem('samaan_user')
-        if (token && userStr) {
-          try {
-            const user = JSON.parse(userStr)
-            set({ token, user })
-          } catch {
-            localStorage.removeItem('samaan_token')
-            localStorage.removeItem('samaan_user')
-          }
-        }
-      },
+        set({
+          token: access_token,
+          user: userResponse.data,
+          isLoading: false
+        })
+      } catch (error: any) {
+        set({
+          error: error.response?.data?.detail || 'Login failed',
+          isLoading: false
+        })
+      }
+    },
 
-      clearError: () => set({ error: null }),
-    }),
-    {
-      name: 'samaan-auth',
-    }
-  )
+    logout: () => {
+      set({ token: null, user: null, error: null })
+    },
+
+    initializeAuth: () => {
+      set({ token: null, user: null })
+    },
+
+    clearError: () => set({ error: null }),
+  })
 )

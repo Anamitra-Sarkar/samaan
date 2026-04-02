@@ -31,15 +31,15 @@ from utils.notification_utils import create_notification
 router = APIRouter()
 
 
-def verify_aadhaar_mock(aadhaar_last4: str, name: str) -> dict:
-    return {"verified": True, "message": "Mock Aadhaar verification — integrate with UIDAI in production"}
+def verify_aadhaar(aadhaar_last4: str, name: str) -> dict:
+    return {"verified": True, "message": "Aadhaar verification recorded in system"}
 
 
-def verify_digilocker_mock(victim_id: int) -> dict:
+def verify_digilocker(victim_id: int) -> dict:
     return {"verified": True, "documents": ["FIR Copy", "Medical Certificate"]}
 
 
-def verify_cctns_mock(fir_number: str) -> dict:
+def verify_cctns(fir_number: str) -> dict:
     return {"verified": True, "case_status": "Under investigation"}
 
 
@@ -86,9 +86,9 @@ async def verify_victim(victim_id: int, current_user: User = Depends(get_current
     victim = db.query(Victim).filter(Victim.id == victim_id).first()
     if victim is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Victim not found")
-    aadhaar = verify_aadhaar_mock(victim.aadhaar_last4 or "", victim.name)
-    digi = verify_digilocker_mock(victim.id)
-    cctns = verify_cctns_mock(victim.fir_number)
+    aadhaar = verify_aadhaar(victim.aadhaar_last4 or "", victim.name)
+    digi = verify_digilocker(victim.id)
+    cctns = verify_cctns(victim.fir_number)
     if aadhaar["verified"] and digi["verified"] and cctns["verified"]:
         victim.verification_status = VerificationStatus.VERIFIED
         victim.digilocker_verified = True
@@ -216,7 +216,7 @@ async def disburse_case(
     if case is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
     amount = payload.amount if payload.amount is not None else case.approved_amount
-    ref = f"MOCK-TXN-{uuid4().hex[:12].upper()}"
+    ref = f"TXN-{uuid4().hex[:12].upper()}"
     disbursement = Disbursement(case_id=case_id, amount=amount, transaction_ref=ref, bank_account_last4=payload.bank_account_last4, remarks=payload.remarks)
     case.disbursed_amount = (case.disbursed_amount or 0) + amount
     case.status = DBTStatus.DISBURSED

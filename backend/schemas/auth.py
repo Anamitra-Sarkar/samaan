@@ -58,7 +58,7 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 class OTPRequest(BaseModel):
-    """Schema for OTP request (mock implementation)"""
+    """Schema for OTP request"""
     mobile: str
     
     @validator('mobile')

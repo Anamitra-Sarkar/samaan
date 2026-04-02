@@ -30,12 +30,12 @@ class User(Base):
     last_login = Column(DateTime(timezone=True), nullable=True)
     
     # Relationships
-    loan_proofs = relationship("LoanProof", back_populates="beneficiary")
+    loan_proofs = relationship("LoanProof", foreign_keys="LoanProof.beneficiary_id", back_populates="beneficiary")
     credit_scores = relationship("CreditScore", back_populates="beneficiary")
     consumption_data = relationship("ConsumptionData", back_populates="beneficiary")
     loan_records = relationship("LoanRecord", back_populates="beneficiary")
-    review_decisions = relationship("LoanProof", foreign_keys="[LoanProof.reviewer_id]", back_populates="reviewer")
-    dbt_cases_assigned = relationship("DBTCase", foreign_keys="[DBTCase.assigned_officer_id]", back_populates="assigned_officer")
+    review_decisions = relationship("LoanProof", foreign_keys="LoanProof.reviewer_id", back_populates="reviewer")
+    dbt_cases_assigned = relationship("DBTCase", foreign_keys="DBTCase.assigned_officer_id", back_populates="assigned_officer")
 
 class BeneficiaryProfile(Base):
     """Extended profile for beneficiaries"""

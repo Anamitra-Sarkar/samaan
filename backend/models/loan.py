@@ -67,5 +67,5 @@ class LoanProof(Base):
     
     # Relationships
     loan_record = relationship("LoanRecord", back_populates="proofs")
-    beneficiary = relationship("User", back_populates="loan_proofs")
+    beneficiary = relationship("User", foreign_keys=[beneficiary_id], back_populates="loan_proofs")
     reviewer = relationship("User", foreign_keys=[reviewer_id], back_populates="review_decisions")

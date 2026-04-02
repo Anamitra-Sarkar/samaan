@@ -61,7 +61,7 @@ class LoanProofResponse(BaseModel):
 
 class ProofReview(BaseModel):
     """Schema for proof review"""
-    decision: str = Field(..., regex="^(approve|reject)$")
+    decision: str = Field(..., pattern="^(approve|reject)$")
     notes: Optional[str] = None
 
 class BulkSyncProof(BaseModel):
@@ -71,12 +71,14 @@ class BulkSyncProof(BaseModel):
 class LoanStatsResponse(BaseModel):
     """Schema for loan statistics"""
     total_submissions: int
+    active_loans: int
     ai_approved_percentage: float
     manually_reviewed_percentage: float
     fraud_flags: int
     pending_reviews: int
     by_status: dict
     by_state: dict
+    monthly_submissions: list[dict]
     
     class Config:
         from_attributes = True

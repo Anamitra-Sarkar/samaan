@@ -8,7 +8,9 @@ import {
   Shield,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Upload,
+  LucideIcon
 } from 'lucide-react'
 import { 
   BarChart, 
@@ -47,10 +49,11 @@ export default function Dashboard() {
           client.get('/credit/dashboard'),
           client.get('/dbt/dashboard')
         ])
+        const agencyFlow = await client.get('/agency/fund-flow')
 
         setStats({
           totalBeneficiaries: creditStats.data.total_beneficiaries || 0,
-          activeLoans: loanStats.data.total_submissions || 0,
+          activeLoans: loanStats.data.active_loans || 0,
           aiValidationRate: loanStats.data.ai_approved_percentage || 0,
           pendingReviews: loanStats.data.pending_reviews || 0,
           activeDBTCases: dbtStats.data.total_cases || 0,
@@ -60,15 +63,8 @@ export default function Dashboard() {
             { name: 'High Risk High Need', value: creditStats.data.risk_band_distribution?.['HIGH_RISK_HIGH_NEED'] || 0, color: '#dc2626' },
             { name: 'High Risk Low Need', value: creditStats.data.risk_band_distribution?.['HIGH_RISK_LOW_NEED'] || 0, color: '#d97706' },
           ],
-          monthlySubmissions: [
-            { month: 'Jan', submissions: 45 },
-            { month: 'Feb', submissions: 52 },
-            { month: 'Mar', submissions: 38 },
-            { month: 'Apr', submissions: 65 },
-            { month: 'May', submissions: 48 },
-            { month: 'Jun', submissions: 72 },
-          ],
-          fundUtilization: { allocated: 10000000, released: 7500000, utilized: 6200000 }
+          monthlySubmissions: loanStats.data.monthly_submissions || [],
+          fundUtilization: agencyFlow.data.totals || { allocated: 0, released: 0, utilized: 0 }
         })
       } catch (error) {
         console.error('Failed to fetch stats:', error)
@@ -193,30 +189,30 @@ export default function Dashboard() {
                 <span>Allocated</span>
                 <span className="font-semibold">₹{stats.fundUtilization.allocated.toLocaleString()}</span>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: '100%' }} />
+                <div className="h-2 bg-gray-200 rounded-full">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: '100%' }} />
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Released</span>
-                <span className="font-semibold">₹{stats.fundUtilization.released.toLocaleString()}</span>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Released</span>
+                  <span className="font-semibold">₹{stats.fundUtilization.released.toLocaleString()}</span>
+                </div>
+                <div className="h-2 bg-gray-200 rounded-full">
+                  <div className="h-full bg-[#d19900] rounded-full" style={{ width: `${stats.fundUtilization.allocated ? (stats.fundUtilization.released / stats.fundUtilization.allocated) * 100 : 0}%` }} />
+                </div>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full">
-                <div className="h-full bg-[#d19900] rounded-full" style={{ width: '75%' }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>Utilized</span>
-                <span className="font-semibold">₹{stats.fundUtilization.utilized.toLocaleString()}</span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full">
-                <div className="h-full bg-[#01696f] rounded-full" style={{ width: '62%' }} />
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Utilized</span>
+                  <span className="font-semibold">₹{stats.fundUtilization.utilized.toLocaleString()}</span>
+                </div>
+                <div className="h-2 bg-gray-200 rounded-full">
+                  <div className="h-full bg-[#01696f] rounded-full" style={{ width: `${stats.fundUtilization.allocated ? (stats.fundUtilization.utilized / stats.fundUtilization.allocated) * 100 : 0}%` }} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <div className="flex items-center justify-between mb-4">
@@ -281,9 +277,6 @@ export default function Dashboard() {
     </div>
   )
 }
-
-// Helper Components
-import { Upload, AlertCircle, CheckCircle, FileText, LucideIcon } from 'lucide-react'
 
 function KpiCard({ 
   title, 

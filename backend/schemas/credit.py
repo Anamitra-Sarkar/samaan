@@ -11,7 +11,7 @@ class ConsumptionDataCreate(BaseModel):
     electricity_units_monthly: Optional[float] = None
     mobile_recharge_monthly_avg: Optional[float] = None
     utility_bill_avg: Optional[float] = None
-    govt_survey_income_band: Optional[str] = Field(None, regex="^[A-D]$")
+    govt_survey_income_band: Optional[str] = Field(None, pattern="^[A-D]$")
     additional_notes: Optional[str] = None
 
 class ConsumptionDataResponse(BaseModel):
@@ -67,7 +67,7 @@ class LendingApplicationResponse(BaseModel):
 
 class LendingDecision(BaseModel):
     """Schema for lending decision"""
-    decision: str = Field(..., regex="^(approve|reject)$")
+    decision: str = Field(..., pattern="^(approve|reject)$")
     amount: Optional[float] = None
     notes: Optional[str] = None
 

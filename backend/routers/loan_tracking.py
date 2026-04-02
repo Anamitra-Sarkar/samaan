@@ -262,10 +262,10 @@ async def get_loan_stats(
     db: Session = Depends(get_db)
 ):
     """Get loan tracking statistics"""
-    verify_role(current_user, [UserRole.STATE_OFFICER, UserRole.ADMIN])
-    
     # Total submissions
     total_submissions = db.query(func.count(LoanProof.id)).scalar() or 0
+
+    active_loans = db.query(func.count(LoanRecord.id)).filter(LoanRecord.loan_status == LoanStatus.ACTIVE).scalar() or 0
     
     # AI approved percentage
     ai_approved = db.query(func.count(LoanProof.id)).filter(
@@ -314,13 +314,21 @@ async def get_loan_stats(
         func.count(LoanProof.id)
     ).join(LoanProof.beneficiary).group_by(User.state).all()
     by_state = {state: count for state, count in by_state_query if state}
+
+    monthly_query = db.query(
+        func.strftime("%Y-%m", LoanRecord.loan_date),
+        func.count(LoanRecord.id)
+    ).group_by(func.strftime("%Y-%m", LoanRecord.loan_date)).order_by(func.strftime("%Y-%m", LoanRecord.loan_date)).all()
+    monthly_submissions = [{"month": month, "submissions": count} for month, count in monthly_query if month]
     
     return LoanStatsResponse(
         total_submissions=total_submissions,
+        active_loans=active_loans,
         ai_approved_percentage=ai_approved_percentage,
         manually_reviewed_percentage=manually_reviewed_percentage,
         fraud_flags=fraud_flags,
         pending_reviews=pending_reviews,
         by_status=by_status,
-        by_state=by_state
+        by_state=by_state,
+        monthly_submissions=monthly_submissions,
     )

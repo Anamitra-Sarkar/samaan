@@ -56,7 +56,7 @@ class FundAllocationCreate(BaseModel):
     """Schema for fund allocation"""
     mapping_id: int
     total_allocated: float = Field(..., gt=0)
-    financial_year: str = Field(..., regex="^\d{4}-\d{4}$")
+    financial_year: str = Field(..., pattern=r"^\d{4}-\d{4}$")
 
 class FundAllocationResponse(BaseModel):
     """Schema for fund allocation response"""

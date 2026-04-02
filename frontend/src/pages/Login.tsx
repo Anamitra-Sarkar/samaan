@@ -40,7 +40,11 @@ export default function Login() {
     await login(data.mobile, data.password)
     const currentError = useAuthStore.getState().error
     if (!currentError) {
-      navigate('/dashboard')
+      const role = useAuthStore.getState().user?.role
+      if (role === 'beneficiary') navigate('/loan/upload')
+      else if (role === 'state_officer') navigate('/loan/review')
+      else if (role === 'bank_officer') navigate('/credit/scores')
+      else navigate('/dashboard')
     }
   }
 

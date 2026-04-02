@@ -16,3 +16,5 @@ out/
 /data/samaan.db
 /data/uploads/
 /ml/credit_model.joblib
+backend/*.db
+frontend/dist/

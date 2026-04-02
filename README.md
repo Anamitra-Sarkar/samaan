@@ -1,17 +1,39 @@
-# Samaan
+# SAMAAN
 
-This is a full-stack application with a React frontend and a Python backend.
+SAMAAN is a full-stack government welfare platform with a FastAPI backend and a React + Vite frontend.
 
-## Running the application
+## Repository layout
 
-To run the application, you will need to have Docker and Docker Compose installed.
+- `backend/` — FastAPI, SQLite, ML helpers, Docker Space deployment
+- `frontend/` — React + TypeScript + Vite, deployed to Vercel
 
-1. Clone the repository.
-2. Create a `.env` file in the `backend` directory with the required environment variables.
-3. Run the following command in the root directory:
+## Local development
 
+Install backend dependencies and run the API:
+
+```bash
+cd backend
+pip install -r requirements.txt
+python -c "from main import app"
+uvicorn main:app --host 0.0.0.0 --port 7860
 ```
-docker-compose up -d --build
+
+Install frontend dependencies and run the UI:
+
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-This will start the backend server on port 7860 and the frontend server on port 3000.
+## Deployment
+
+Backend:
+- Deploy the `backend/` folder as a HuggingFace Spaces Docker app.
+- The backend README includes the required Spaces frontmatter.
+- The GitHub Actions workflow `.github/workflows/sync-backend-hf.yml` mirrors backend changes to the HF Space repo.
+
+Frontend:
+- Deploy `frontend/` to Vercel.
+- Set `VITE_API_BASE_URL` to the HuggingFace Space URL.
+

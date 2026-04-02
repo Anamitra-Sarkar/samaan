@@ -1,0 +1,42 @@
+name: Sync backend to HuggingFace
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/sync-backend-hf.yml'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync backend directory to HF Space
+        env:
+          HF_SPACE_REPO: ${{ secrets.HF_SPACE_REPO }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HF_SPACE_REPO:-}" ] || [ -z "${HF_TOKEN:-}" ]; then
+            echo "HF_SPACE_REPO and HF_TOKEN secrets are required."
+            exit 1
+          fi
+
+          workdir="$(mktemp -d)"
+          git clone "https://${HF_TOKEN}@${HF_SPACE_REPO#https://}" "$workdir"
+          rsync -a --delete backend/ "$workdir"/
+          cd "$workdir"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No backend changes to sync."
+            exit 0
+          fi
+          git config user.name "Copilot Sync Bot"
+          git config user.email "copilot-sync-bot@users.noreply.github.com"
+          git commit -m "Sync backend from main branch"
+          git push
+

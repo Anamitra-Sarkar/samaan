@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { client } from '../api/client'
+import axios from 'axios'
 
 interface User {
   id: number
@@ -34,11 +34,14 @@ export const useAuthStore = create<AuthState>()(
       login: async (mobile: string, password: string) => {
         set({ isLoading: true, error: null })
         try {
-          const response = await client.post('/auth/login', { mobile, password })
+          const response = await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL || '/api'}/auth/login`,
+            { mobile, password }
+          )
           const { access_token } = response.data
           
           // Get user info
-          const userResponse = await client.get('/auth/me', {
+          const userResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL || '/api'}/auth/me`, {
             headers: { Authorization: `Bearer ${access_token}` }
           })
           

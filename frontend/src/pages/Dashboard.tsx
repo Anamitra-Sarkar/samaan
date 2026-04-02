@@ -35,7 +35,13 @@ export default function Dashboard() {
     activeDBTCases: 0,
     creditScoreDistribution: [],
     monthlySubmissions: [],
-    fundUtilization: { allocated: 0, released: 0, utilized: 0 }
+    fundUtilization: { allocated: 0, released: 0, utilized: 0 },
+    dbt: {
+      totalCases: 0,
+      pendingCases: 0,
+      grievanceResolutionRate: 0,
+      averageTimeToDisburse: 0,
+    },
   })
   const [loading, setLoading] = useState(true)
   const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([])
@@ -70,7 +76,13 @@ export default function Dashboard() {
             { name: 'High Risk Low Need', value: creditStats.data.risk_band_distribution?.['HIGH_RISK_LOW_NEED'] || 0, color: '#d97706' },
           ],
           monthlySubmissions: loanStats.data.monthly_submissions || [],
-          fundUtilization: agencyFlow.data.totals || { allocated: 0, released: 0, utilized: 0 }
+          fundUtilization: agencyFlow.data.totals || { allocated: 0, released: 0, utilized: 0 },
+          dbt: {
+            totalCases: dbtStats.data.total_cases || 0,
+            pendingCases: dbtStats.data.pending_cases || 0,
+            grievanceResolutionRate: dbtStats.data.grievance_resolution_rate || 0,
+            averageTimeToDisburse: dbtStats.data.average_time_to_disburse || 0,
+          },
         })
         setRecentActivity(activity.data.items || [])
       } catch (error) {
@@ -228,20 +240,20 @@ export default function Dashboard() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[#f7f6f2] p-4 rounded-lg">
-              <p className="text-3xl font-bold text-[#01696f]">{stats.activeDBTCases}</p>
+              <p className="text-3xl font-bold text-[#01696f]">{stats.dbt.totalCases}</p>
               <p className="text-sm text-gray-600">Total Cases</p>
             </div>
             <div className="bg-[#f7f6f2] p-4 rounded-lg">
-              <p className="text-3xl font-bold text-green-600">85%</p>
-              <p className="text-sm text-gray-600">Resolution Rate</p>
+              <p className="text-3xl font-bold text-green-600">{stats.dbt.grievanceResolutionRate.toFixed(1)}%</p>
+              <p className="text-sm text-gray-600">Grievance Resolution</p>
             </div>
             <div className="bg-[#f7f6f2] p-4 rounded-lg">
-              <p className="text-3xl font-bold text-orange-600">12</p>
+              <p className="text-3xl font-bold text-orange-600">{stats.dbt.pendingCases}</p>
               <p className="text-sm text-gray-600">Pending Cases</p>
             </div>
             <div className="bg-[#f7f6f2] p-4 rounded-lg">
-              <p className="text-3xl font-bold text-red-600">3</p>
-              <p className="text-sm text-gray-600">Open Grievances</p>
+              <p className="text-3xl font-bold text-red-600">{stats.dbt.averageTimeToDisburse.toFixed(1)}</p>
+              <p className="text-sm text-gray-600">Avg days to disburse</p>
             </div>
           </div>
         </div>

@@ -21,9 +21,17 @@ export default function DataTable<T extends Record<string, any>>({
   const sorted = useMemo(() => {
     if (!sortKey) return data
     return [...data].sort((a, b) => {
-      const av = String((a as any)[sortKey] ?? '')
-      const bv = String((b as any)[sortKey] ?? '')
-      return direction === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
+      const av = (a as any)[sortKey]
+      const bv = (b as any)[sortKey]
+      const an = typeof av === 'number' ? av : Number(av)
+      const bn = typeof bv === 'number' ? bv : Number(bv)
+      const bothNumeric = Number.isFinite(an) && Number.isFinite(bn)
+      if (bothNumeric) {
+        return direction === 'asc' ? an - bn : bn - an
+      }
+      const as = String(av ?? '')
+      const bs = String(bv ?? '')
+      return direction === 'asc' ? as.localeCompare(bs) : bs.localeCompare(as)
     })
   }, [data, sortKey, direction])
 
@@ -66,4 +74,3 @@ export default function DataTable<T extends Record<string, any>>({
     </div>
   )
 }
-

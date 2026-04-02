@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { useAuthStore } from './store/authStore'
 
 // Layout
@@ -31,8 +31,10 @@ import SocialPension from './pages/dbt/SocialPension'
 import DBTSchemes from './pages/dbt/DBTSchemes'
 import DBTCaseDetail from './pages/dbt/DBTCaseDetail'
 import GrievancePortal from './pages/dbt/GrievancePortal'
+import VictimRegistry from './pages/dbt/VictimRegistry'
+import DisbursementTracker from './pages/dbt/DisbursementTracker'
 
-function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) {
+function ProtectedRoute({ children, allowedRoles }: { children: ReactNode, allowedRoles?: string[] }) {
   const { token, user } = useAuthStore()
   
   if (!token) {
@@ -77,7 +79,9 @@ function App() {
           <Route path="agency/directory" element={<AgencyDirectory />} />
           <Route path="agency/fund-flow" element={<FundFlow />} />
           <Route path="agency/accountability" element={<AgencyMapping />} />
-          <Route path="dbt/victims" element={<DBTChecker />} />
+          <Route path="dbt/victims" element={<VictimRegistry />} />
+          <Route path="dbt/disbursements" element={<DisbursementTracker />} />
+          <Route path="dbt/checker" element={<DBTChecker />} />
           <Route path="dbt/register" element={<SocialPension />} />
           <Route path="dbt/cases" element={<DBTSchemes />} />
           <Route path="dbt/case/:id" element={<DBTCaseDetail />} />
@@ -92,7 +96,6 @@ function App() {
         <Route path="/village/gap-report" element={<Navigate to="/village/list" replace />} />
         <Route path="/village/detail/:id" element={<Navigate to="/village/map" replace />} />
         <Route path="/agency/mapping" element={<Navigate to="/agency/accountability" replace />} />
-        <Route path="/dbt/checker" element={<Navigate to="/dbt/victims" replace />} />
         <Route path="/dbt/social-pension" element={<Navigate to="/dbt/register" replace />} />
         <Route path="/dbt/schemes" element={<Navigate to="/dbt/cases" replace />} />
       </Routes>

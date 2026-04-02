@@ -14,6 +14,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from models.credit import RiskBand
+from ml.shap_explainer import compute_shap_explanation
 
 MODEL_PATH = Path(os.getenv("SAMAAN_CREDIT_MODEL_PATH", "/data/credit_model.pkl"))
 FALLBACK_MODEL_PATH = Path("/tmp/samaan-credit-model.pkl")
@@ -164,7 +165,6 @@ def build_feature_vector(repayment_summary, consumption_data) -> Dict:
 def compute_composite_score(repayment_summary, consumption_data) -> tuple[float, RiskBand, Dict]:
     model = get_credit_model()
     features = build_feature_vector(repayment_summary, consumption_data)
-    proba = model.predict_proba(features)
     label = model.predict_label(features)
 
     repayment_score = max(0.0, min(100.0, (
@@ -181,12 +181,11 @@ def compute_composite_score(repayment_summary, consumption_data) -> tuple[float,
     income_score = max(0.0, min(100.0, income_signal))
     composite = round((repayment_score * 0.6) + (income_score * 0.4), 2)
 
+    shap_top_features = compute_shap_explanation(model.pipeline, features, FEATURE_COLUMNS)
     explanation = {
-        "top_features": [
-            {"feature": "repayment_rate", "direction": "positive" if features["repayment_rate"] >= 0.5 else "negative", "impact": round(repayment_score / 100, 3)},
-            {"feature": "income_proxy", "direction": "positive" if income_score >= 60 else "negative", "impact": round(income_score / 100, 3)},
-            {"feature": "default_rate", "direction": "negative" if features["default_rate"] > 0.1 else "positive", "impact": round(float(proba.max()), 3)},
-        ],
+        "top_features": shap_top_features,
+        "repayment_score": round(repayment_score, 2),
+        "income_score": round(income_score, 2),
         "risk_band": label.value,
         "model_version": MODEL_VERSION,
     }

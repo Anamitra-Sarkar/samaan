@@ -67,10 +67,12 @@ const navItems: NavItem[] = [
     icon: Shield,
     path: '/dbt',
     subItems: [
-      { label: 'Victims', path: '/dbt/victims' },
-      { label: 'Register', path: '/dbt/register' },
-      { label: 'Cases', path: '/dbt/cases' },
-      { label: 'Grievance', path: '/dbt/grievance' },
+      { label: 'Victim Registry', path: '/dbt/victims' },
+      { label: 'Disbursement Tracker', path: '/dbt/disbursements' },
+      { label: 'DBT Checker', path: '/dbt/checker' },
+      { label: 'Case List', path: '/dbt/cases' },
+      { label: 'Victim Registration', path: '/dbt/register' },
+      { label: 'Grievance Portal', path: '/dbt/grievance' },
     ]
   },
 ]
@@ -113,12 +115,14 @@ export default function Sidebar() {
       </button>
 
       {/* Sidebar */}
-      <aside className={`
+      <aside 
+        style={{
+          width: sidebarCollapsed ? '5rem' : '15rem',
+        }}
+        className={`
         fixed left-0 top-0 h-screen bg-[#01696f] text-white overflow-visible z-40
-        transition-transform duration-300 ease-in-out
+        transition-all duration-300 ease-in-out
         flex flex-col
-        w-[240px] lg:w-auto
-        ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-[240px]'}
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className={`relative border-b border-white/20 ${sidebarCollapsed ? 'p-4' : 'p-6'}`}>

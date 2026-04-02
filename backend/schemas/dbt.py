@@ -36,6 +36,14 @@ class VictimResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class VictimVerificationResponse(BaseModel):
+    victim: VictimResponse
+    aadhaar_verified: bool
+    digilocker_verified: bool
+    digilocker_documents: List[str]
+    cctns_verified: bool
+    cctns_case_status: str
+
 class DBTCaseCreate(BaseModel):
     """Schema for DBT case creation"""
     victim_id: int
@@ -60,7 +68,7 @@ class DBTCaseResponse(BaseModel):
 class DisbursementCreate(BaseModel):
     """Schema for disbursement creation"""
     case_id: int
-    amount: float = Field(..., gt=0)
+    amount: Optional[float] = Field(None, gt=0)
     bank_account_last4: Optional[str] = None
     remarks: Optional[str] = None
 

@@ -14,6 +14,7 @@ from models.dbt import Victim, DBTCase, Disbursement, GrievanceTicket, CaseType,
 from schemas.dbt import (
     VictimCreate,
     VictimResponse,
+    VictimVerificationResponse,
     DBTCaseCreate,
     DBTCaseResponse,
     DisbursementCreate,
@@ -68,10 +69,19 @@ async def register_victim(
 @router.get("/victims")
 async def list_victims(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
     victims = db.query(Victim).order_by(desc(Victim.created_at)).all()
-    return {"items": [VictimResponse.model_validate(v).model_dump() for v in victims], "total": len(victims)}
+    return {
+        "items": [
+            {
+                **VictimResponse.model_validate(v).model_dump(),
+                "aadhaar_verified": v.verification_status == VerificationStatus.VERIFIED,
+            }
+            for v in victims
+        ],
+        "total": len(victims),
+    }
 
 
-@router.post("/verify/{victim_id}", response_model=VictimResponse)
+@router.post("/verify/{victim_id}", response_model=VictimVerificationResponse)
 async def verify_victim(victim_id: int, current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
     victim = db.query(Victim).filter(Victim.id == victim_id).first()
     if victim is None:
@@ -85,7 +95,14 @@ async def verify_victim(victim_id: int, current_user: User = Depends(get_current
         victim.cctns_verified = True
     db.commit()
     db.refresh(victim)
-    return victim
+    return {
+        "victim": VictimResponse.model_validate(victim).model_dump(),
+        "aadhaar_verified": aadhaar["verified"],
+        "digilocker_verified": digi["verified"],
+        "digilocker_documents": digi["documents"],
+        "cctns_verified": cctns["verified"],
+        "cctns_case_status": cctns["case_status"],
+    }
 
 
 @router.post("/create-case", response_model=DBTCaseResponse)
@@ -97,6 +114,8 @@ async def create_case(
     victim = db.query(Victim).filter(Victim.id == payload.victim_id).first()
     if victim is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Victim not found")
+    if victim.verification_status != VerificationStatus.VERIFIED:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Victim must be verified before creating a DBT case")
     case = DBTCase(victim_id=payload.victim_id, assistance_type=payload.assistance_type, approved_amount=payload.approved_amount, status=DBTStatus.UNDER_REVIEW)
     db.add(case)
     db.commit()
@@ -115,9 +134,38 @@ async def create_case(
 
 
 @router.get("/cases")
-async def list_cases(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    cases = db.query(DBTCase).order_by(desc(DBTCase.created_at)).all()
-    return {"items": [DBTCaseResponse.model_validate(case).model_dump() for case in cases], "total": len(cases)}
+async def list_cases(
+    mobile: Optional[str] = None,
+    status: Optional[DBTStatus] = None,
+    case_type: Optional[CaseType] = None,
+    state: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    query = db.query(DBTCase).join(DBTCase.victim)
+    if mobile:
+        query = query.filter(Victim.mobile == mobile)
+    if status:
+        query = query.filter(DBTCase.status == status)
+    if case_type:
+        query = query.filter(Victim.case_type == case_type)
+    if state:
+        query = query.filter(Victim.state == state)
+    cases = query.order_by(desc(DBTCase.created_at)).all()
+    items = []
+    for case in cases:
+        victim = case.victim
+        items.append({
+            **DBTCaseResponse.model_validate(case).model_dump(),
+            "victim_name": victim.name if victim else None,
+            "victim_state": victim.state if victim else None,
+            "victim_district": victim.district if victim else None,
+            "case_type": victim.case_type.value if victim else None,
+            "mobile": victim.mobile if victim else None,
+            "verification_status": victim.verification_status.value if victim else None,
+            "assigned_officer": case.assigned_officer.name if case.assigned_officer else None,
+        })
+    return {"items": items, "total": len(items)}
 
 
 @router.get("/case/{case_id}")
@@ -167,9 +215,10 @@ async def disburse_case(
     case = db.query(DBTCase).filter(DBTCase.id == case_id).first()
     if case is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+    amount = payload.amount if payload.amount is not None else case.approved_amount
     ref = f"MOCK-TXN-{uuid4().hex[:12].upper()}"
-    disbursement = Disbursement(case_id=case_id, amount=payload.amount, transaction_ref=ref, bank_account_last4=payload.bank_account_last4, remarks=payload.remarks)
-    case.disbursed_amount = (case.disbursed_amount or 0) + payload.amount
+    disbursement = Disbursement(case_id=case_id, amount=amount, transaction_ref=ref, bank_account_last4=payload.bank_account_last4, remarks=payload.remarks)
+    case.disbursed_amount = (case.disbursed_amount or 0) + amount
     case.status = DBTStatus.DISBURSED
     db.add(disbursement)
     db.commit()

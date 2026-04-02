@@ -21,8 +21,7 @@ from schemas.credit import (
     CreditDashboardResponse,
 )
 from routers.auth import get_current_active_user, verify_role
-from ml.credit_model import compute_composite_score, build_feature_vector, get_credit_model
-from ml.shap_explainer import explain_features
+from ml.credit_model import compute_composite_score
 from utils.notification_utils import create_notification
 
 router = APIRouter()
@@ -90,15 +89,16 @@ async def _rescore_beneficiary(beneficiary_id: int, db: Session) -> CreditScore:
 
     composite, risk_band, explanation = compute_composite_score(summary, consumption)
     repayment_rate = summary.on_time_payments / max(summary.total_loans or 1, 1)
-    income_score = float(explanation["top_features"][1]["impact"]) * 100 if explanation.get("top_features") else 50.0
+    income_score = float(explanation.get("income_score", 50.0))
+    repayment_score = float(explanation.get("repayment_score", repayment_rate * 100))
 
     score = CreditScore(
         beneficiary_id=beneficiary_id,
         composite_score=composite,
-        repayment_sub_score=round(repayment_rate * 100, 2),
+        repayment_sub_score=round(repayment_score, 2),
         income_sub_score=round(income_score, 2),
         risk_band=risk_band,
-        score_explanation=explain_features(build_feature_vector(summary, consumption), composite, risk_band.value),
+        score_explanation=explanation,
         model_version="1.0.0",
     )
     db.add(score)

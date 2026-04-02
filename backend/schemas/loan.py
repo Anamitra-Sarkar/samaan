@@ -8,13 +8,18 @@ from models.loan import LoanStatus, LoanProofValidationStatus
 
 class LoanRecordCreate(BaseModel):
     """Schema for creating loan record"""
-    beneficiary_id: int
+    beneficiary_id: Optional[int] = None
+    beneficiary_name: Optional[str] = None
+    mobile: Optional[str] = None
+    state: Optional[str] = None
+    district: Optional[str] = None
     state_agency_id: Optional[int] = None
     loan_amount: float = Field(..., gt=0)
     loan_purpose: str = Field(..., max_length=255)
     asset_description: Optional[str] = None
     repayment_schedule: Optional[str] = None
     interest_rate: Optional[float] = None
+    loan_date: Optional[datetime] = None
 
 class LoanRecordResponse(BaseModel):
     """Schema for loan record response"""

@@ -3,6 +3,7 @@ Loan tracking router
 """
 import os
 import uuid
+from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
@@ -16,6 +17,7 @@ from schemas.loan import (
     LoanProofResponse, ProofReview, BulkSyncProof, LoanStatsResponse
 )
 from routers.auth import get_current_active_user, verify_role
+from routers.auth import get_password_hash
 from ml.loan_ai_validator import validate_loan_proof
 from utils.file_utils import save_uploaded_file
 from utils.notification_utils import create_notification
@@ -30,21 +32,43 @@ async def enter_beneficiary_loan(
 ):
     """State officer enters beneficiary loan data"""
     verify_role(current_user, [UserRole.STATE_OFFICER, UserRole.ADMIN])
-    
-    # Verify beneficiary exists
-    beneficiary = db.query(User).filter(
-        User.id == loan_data.beneficiary_id,
-        User.role == UserRole.BENEFICIARY
-    ).first()
-    if not beneficiary:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Beneficiary not found"
-        )
+
+    beneficiary = None
+    if loan_data.beneficiary_id is not None:
+        beneficiary = db.query(User).filter(
+            User.id == loan_data.beneficiary_id,
+            User.role == UserRole.BENEFICIARY,
+        ).first()
+    elif loan_data.mobile:
+        beneficiary = db.query(User).filter(User.mobile == loan_data.mobile).first()
+        if beneficiary and beneficiary.role != UserRole.BENEFICIARY:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Mobile number belongs to a non-beneficiary account")
+        if beneficiary is None:
+            if not loan_data.beneficiary_name:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Beneficiary name is required when creating a new beneficiary")
+            beneficiary = User(
+                mobile=loan_data.mobile,
+                name=loan_data.beneficiary_name,
+                password_hash=get_password_hash(loan_data.mobile),
+                role=UserRole.BENEFICIARY,
+                state=loan_data.state,
+                district=loan_data.district,
+            )
+            db.add(beneficiary)
+            db.flush()
+        else:
+            if loan_data.beneficiary_name:
+                beneficiary.name = loan_data.beneficiary_name
+            if loan_data.state:
+                beneficiary.state = loan_data.state
+            if loan_data.district:
+                beneficiary.district = loan_data.district
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Either beneficiary_id or beneficiary mobile details are required")
     
     # Create loan record
     loan_record = LoanRecord(
-        beneficiary_id=loan_data.beneficiary_id,
+        beneficiary_id=beneficiary.id,
         state_agency_id=loan_data.state_agency_id,
         loan_amount=loan_data.loan_amount,
         loan_purpose=loan_data.loan_purpose,
@@ -53,6 +77,8 @@ async def enter_beneficiary_loan(
         interest_rate=loan_data.interest_rate,
         loan_status=LoanStatus.ACTIVE
     )
+    if loan_data.loan_date is not None:
+        loan_record.loan_date = loan_data.loan_date
     
     db.add(loan_record)
     db.commit()

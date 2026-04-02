@@ -7,7 +7,7 @@ from typing import Tuple
 
 from fastapi import UploadFile, HTTPException, status
 
-UPLOAD_ROOT = Path(os.getenv("SAMAAN_UPLOAD_DIR", "/data/uploads"))
+UPLOAD_ROOT = Path(os.getenv("SAMAAN_UPLOADS_DIR", os.getenv("SAMAAN_UPLOAD_DIR", "/data/uploads")))
 
 
 def ensure_upload_root() -> Path:

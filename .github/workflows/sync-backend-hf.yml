@@ -28,7 +28,8 @@ jobs:
 
           workdir="$(mktemp -d)"
           repo_dir="$workdir/repo"
-          git clone "https://${HF_TOKEN}@${HF_SPACE_REPO#https://}" "$repo_dir"
+          auth_url="https://__token__:${HF_TOKEN}@${HF_SPACE_REPO#https://}"
+          git clone "$auth_url" "$repo_dir"
           rsync -a --delete --exclude='.git' backend/ "$repo_dir"/
           cd "$repo_dir"
           git add -A
@@ -39,4 +40,5 @@ jobs:
           git config user.name "Copilot Sync Bot"
           git config user.email "copilot-sync-bot@users.noreply.github.com"
           git commit -m "Sync backend from main branch"
-          git push
+          git remote set-url origin "$auth_url"
+          git push origin main

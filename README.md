@@ -13,7 +13,7 @@ The repository contains:
 ### Backend
 
 - FastAPI on Python 3.11+
-- SQLite with SQLAlchemy ORM
+- SQLite with SQLAlchemy ORM for local use; PostgreSQL is supported for production via `DATABASE_URL`
 - JWT auth with bcrypt password hashing
 - ML stack with scikit-learn, XGBoost, SHAP, OpenCV, Pillow, and Ultralytics
 - Static uploads served from `/uploads`
@@ -93,43 +93,59 @@ HF_TOKEN=your_token python ml/train_and_push.py --repo Arko007/samaan-credit-mod
 
 At runtime, the backend can download the model from the Hub if `SAMAAN_HF_MODEL_REPO` is set.
 
-## Deployment
+## Production deployment guide
 
-### Backend deployment to HuggingFace Spaces
+### 1) Hugging Face Space backend
 
-Deploy the `backend/` directory as a Docker Space.
+Deploy **`backend/` only** as a **Docker Space**.
 
-Requirements already included in the repo:
+1. Create a new Space on Hugging Face.
+2. Set the Space type to **Docker**.
+3. Copy the contents of `backend/` into the Space repo root.
+4. Make sure the root contains:
+   - `Dockerfile`
+   - `README.md` with HF metadata
+   - `main.py`
+   - `requirements.txt`
+5. Add these Space secrets:
+   - `SAMAAN_ENV=production`
+   - `SECRET_KEY`
+   - `DATABASE_URL` (PostgreSQL recommended)
+   - `ALLOWED_ORIGINS` (your Vercel URL)
+   - `SAMAAN_HF_MODEL_REPO` if you want the backend to download a pretrained credit model
+   - `SAMAAN_AADHAAR_VERIFY_URL`, `SAMAAN_DIGILOCKER_VERIFY_URL`, `SAMAAN_CCTNS_VERIFY_URL` when real verification integrations are available
+6. Keep `SAMAAN_ENABLE_SAMPLE_DATA` disabled in production.
 
-- `backend/Dockerfile` exposes port `7860`
-- `backend/requirements.txt` includes all runtime dependencies
-- `README.md` includes Docker-compatible deployment guidance
+The backend already exposes `/health` and serves uploads from `/uploads`.
 
-Recommended HuggingFace Spaces secrets:
+### 2) Frontend deployment to Vercel
 
-- `SAMAAN_HF_MODEL_REPO` — your model repo, for example `Arko007/samaan-credit-model`
-- `HF_TOKEN` — only if your backend workflow or manual operations need Hub access
+Deploy **`frontend/`** to Vercel.
 
-If you upload the backend through a GitHub sync workflow, make sure the GitHub repository secrets are configured first.
+1. Import the `frontend/` folder as the Vercel project root.
+2. Set the environment variable:
+   - `VITE_API_BASE_URL` = public Hugging Face Space URL
+3. Build command: `npm run build`
+4. Output directory: `dist`
 
-### Frontend deployment to Vercel
+`frontend/vercel.json` already handles SPA rewrites and static asset caching.
 
-Deploy `frontend/` to Vercel.
+### 3) GitHub sync automation
 
-Set this environment variable in Vercel:
+The repo includes `.github/workflows/sync-backend-hf.yml` to mirror backend changes into the HF Space repository.
 
-- `VITE_API_BASE_URL` — the public URL of the deployed HuggingFace Space backend
+Configure these GitHub secrets:
 
-## GitHub secrets and automation
+- `HF_SPACE_REPO` — full Hugging Face Space Git URL
+- `HF_TOKEN` — token with write access to the Space
 
-The repository includes `.github/workflows/sync-backend-hf.yml`, which mirrors backend changes into a HuggingFace Space repository.
+### 4) Recommended production flow
 
-Configure these GitHub repository secrets:
-
-- `HF_SPACE_REPO` — the full HuggingFace Space Git URL
-- `HF_TOKEN` — a HuggingFace token with permission to push to the Space
-
-Without both secrets, the workflow exits early by design.
+1. Deploy backend to Hugging Face.
+2. Deploy frontend to Vercel.
+3. Set `ALLOWED_ORIGINS` on the backend to the Vercel domain.
+4. If using pretrained credit scoring, set `SAMAAN_HF_MODEL_REPO`.
+5. If using real verification providers, configure the verification URLs before opening the app to users.
 
 ## Handy checks
 

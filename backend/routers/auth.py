@@ -1,28 +1,33 @@
-"""
-Authentication router
-"""
-import os
+"""Authentication router."""
+
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-from jose import JWTError, jwt
+
 import bcrypt
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from sqlalchemy.orm import Session
 
 from database import get_db
 from models.user import User
 from schemas.auth import (
-    UserCreate, UserLogin, Token, TokenData, UserResponse,
-    RefreshTokenRequest, OTPRequest, OTPVerify
+    OTPRequest,
+    OTPVerify,
+    RefreshTokenRequest,
+    Token,
+    TokenData,
+    UserCreate,
+    UserLogin,
+    UserResponse,
 )
+from utils.runtime import get_secret_key
 
 router = APIRouter()
 
-# Security configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "samaan-secret-key-for-development-only")
+SECRET_KEY = get_secret_key()
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")

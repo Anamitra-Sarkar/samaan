@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import os
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from jose import jwt
 
+from utils.runtime import get_secret_key
+
 ALGORITHM = "HS256"
-SECRET_KEY = os.getenv("SECRET_KEY", "samaan-secret-key-for-development-only")
+SECRET_KEY = get_secret_key()
 
 
 def create_token(payload: Dict[str, Any], expires_delta: timedelta, token_type: str) -> str:
@@ -18,4 +19,3 @@ def create_token(payload: Dict[str, Any], expires_delta: timedelta, token_type: 
 
 def decode_token(token: str) -> Dict[str, Any]:
     return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-

@@ -43,6 +43,12 @@ Useful backend environment variables:
 
 - `SAMAAN_UPLOADS_DIR` — overrides the upload directory if needed
 - `SAMAAN_HF_MODEL_REPO` — optional HuggingFace model repo for downloading the credit model at startup
+- `DATABASE_URL` — PostgreSQL URL for production deployments
+- `SECRET_KEY` — required for JWT signing in production
+- `ALLOWED_ORIGINS` — comma-separated frontend origins for CORS
+- `SAMAAN_AADHAAR_VERIFY_URL`, `SAMAAN_DIGILOCKER_VERIFY_URL`, `SAMAAN_CCTNS_VERIFY_URL` — optional real verification endpoints
+- `SAMAAN_ENV=production` — enables production-safe config checks
+- `SAMAAN_ENABLE_SAMPLE_DATA` — keep unset/false in production
 
 ### 2) Frontend
 
@@ -71,6 +77,10 @@ VITE_API_BASE_URL=http://localhost:7860
 ```
 
 For Vercel deployments, set `VITE_API_BASE_URL` in the project environment settings to the public HuggingFace Space URL.
+
+Recommended frontend production envs:
+
+- `VITE_API_BASE_URL` — public backend URL
 
 ### HuggingFace model workflow
 

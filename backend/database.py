@@ -1,29 +1,26 @@
-"""
-Database configuration for SAMAAN
-SQLite with SQLAlchemy ORM
-"""
-import os
+"""Database configuration for SAMAAN."""
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
-# Database URL - using SQLite for simplicity
-DATABASE_URL = "sqlite:///./samaan.db"
+from utils.runtime import get_database_url
 
-# Create engine
-engine = create_engine(
-    DATABASE_URL, 
-    connect_args={"check_same_thread": False},
-    echo=False  # Set to True for SQL debugging
-)
+DATABASE_URL = get_database_url()
 
-# Create SessionLocal class
+engine_kwargs = {"echo": False, "pool_pre_ping": True}
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+    engine_kwargs["connect_args"] = connect_args
+else:
+    engine_kwargs["pool_recycle"] = 300
+
+engine = create_engine(DATABASE_URL, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Create Base class
 Base = declarative_base()
 
-# Dependency to get DB session
+
 def get_db():
     db = SessionLocal()
     try:

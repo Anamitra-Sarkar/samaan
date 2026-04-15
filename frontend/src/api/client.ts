@@ -1,9 +1,15 @@
-import axios from 'axios'
+import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '../store/authStore'
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+
+type RetriableConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean
+}
+
 export const client = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 30000,
+  baseURL: apiBaseUrl,
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -24,10 +30,21 @@ client.interceptors.request.use(
 // Response interceptor to handle auth errors
 client.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      useAuthStore.getState().logout()
-      window.location.href = '/login'
+  async (error) => {
+    const originalRequest = error.config as RetriableConfig | undefined
+    const requestUrl = originalRequest?.url || ''
+    const isAuthRoute = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/refresh')
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthRoute) {
+      originalRequest._retry = true
+      try {
+        await useAuthStore.getState().refreshSession()
+        return client(originalRequest)
+      } catch {
+        useAuthStore.getState().logout()
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
+      }
     }
     return Promise.reject(error)
   }

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import os
 from uuid import uuid4
 from typing import Optional
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
@@ -31,16 +33,44 @@ from utils.notification_utils import create_notification
 router = APIRouter()
 
 
-def verify_aadhaar(aadhaar_last4: str, name: str) -> dict:
-    return {"verified": True, "message": "Aadhaar verification recorded in system"}
+def _integration_config(service: str) -> tuple[str, str]:
+    url = os.getenv(f"SAMAAN_{service}_VERIFY_URL", "").strip()
+    api_key = os.getenv("SAMAAN_VERIFICATION_API_KEY", "").strip()
+    return url, api_key
 
 
-def verify_digilocker(victim_id: int) -> dict:
-    return {"verified": True, "documents": ["FIR Copy", "Medical Certificate"]}
+async def _call_verifier(service: str, payload: dict) -> dict:
+    url, api_key = _integration_config(service)
+    if not url:
+        return {"verified": False, "message": f"{service.title()} verification service is not configured"}
+
+    headers = {}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        try:
+            response = await client.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            return {"verified": False, "message": f"{service.title()} verification unavailable: {exc}"}
+
+        data = response.json()
+        if not isinstance(data, dict):
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"{service.title()} verifier returned an invalid response")
+        return data
 
 
-def verify_cctns(fir_number: str) -> dict:
-    return {"verified": True, "case_status": "Under investigation"}
+async def verify_aadhaar(aadhaar_last4: str, name: str) -> dict:
+    return await _call_verifier("AADHAAR", {"aadhaar_last4": aadhaar_last4, "name": name})
+
+
+async def verify_digilocker(victim_id: int) -> dict:
+    return await _call_verifier("DIGILOCKER", {"victim_id": victim_id})
+
+
+async def verify_cctns(fir_number: str) -> dict:
+    return await _call_verifier("CCTNS", {"fir_number": fir_number})
 
 
 @router.post("/register-victim", response_model=VictimResponse)
@@ -86,22 +116,25 @@ async def verify_victim(victim_id: int, current_user: User = Depends(get_current
     victim = db.query(Victim).filter(Victim.id == victim_id).first()
     if victim is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Victim not found")
-    aadhaar = verify_aadhaar(victim.aadhaar_last4 or "", victim.name)
-    digi = verify_digilocker(victim.id)
-    cctns = verify_cctns(victim.fir_number)
-    if aadhaar["verified"] and digi["verified"] and cctns["verified"]:
+    aadhaar = await verify_aadhaar(victim.aadhaar_last4 or "", victim.name)
+    digi = await verify_digilocker(victim.id)
+    cctns = await verify_cctns(victim.fir_number)
+    verified = bool(aadhaar.get("verified")) and bool(digi.get("verified")) and bool(cctns.get("verified"))
+    if verified:
         victim.verification_status = VerificationStatus.VERIFIED
-        victim.digilocker_verified = True
-        victim.cctns_verified = True
+        victim.digilocker_verified = bool(digi.get("verified"))
+        victim.cctns_verified = bool(cctns.get("verified"))
+    elif any(result.get("rejected") for result in [aadhaar, digi, cctns]):
+        victim.verification_status = VerificationStatus.REJECTED
     db.commit()
     db.refresh(victim)
     return {
         "victim": VictimResponse.model_validate(victim).model_dump(),
-        "aadhaar_verified": aadhaar["verified"],
-        "digilocker_verified": digi["verified"],
-        "digilocker_documents": digi["documents"],
-        "cctns_verified": cctns["verified"],
-        "cctns_case_status": cctns["case_status"],
+        "aadhaar_verified": bool(aadhaar.get("verified")),
+        "digilocker_verified": bool(digi.get("verified")),
+        "digilocker_documents": digi.get("documents", []),
+        "cctns_verified": bool(cctns.get("verified")),
+        "cctns_case_status": cctns.get("case_status", cctns.get("message", "Verification pending")),
     }
 
 

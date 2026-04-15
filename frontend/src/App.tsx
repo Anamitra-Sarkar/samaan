@@ -35,7 +35,11 @@ import VictimRegistry from './pages/dbt/VictimRegistry'
 import DisbursementTracker from './pages/dbt/DisbursementTracker'
 
 function ProtectedRoute({ children, allowedRoles }: { children: ReactNode, allowedRoles?: string[] }) {
-  const { token, user } = useAuthStore()
+  const { token, user, isHydrated } = useAuthStore()
+
+  if (!isHydrated) {
+    return <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">Loading session...</div>
+  }
   
   if (!token) {
     return <Navigate to="/login" replace />

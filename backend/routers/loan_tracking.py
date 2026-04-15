@@ -172,6 +172,22 @@ async def get_my_proofs(
     
     return proofs
 
+
+@router.get("/my-records", response_model=List[LoanRecordResponse])
+async def get_my_records(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Return the beneficiary's own loan records."""
+    verify_role(current_user, [UserRole.BENEFICIARY, UserRole.ADMIN])
+    records = (
+        db.query(LoanRecord)
+        .filter(LoanRecord.beneficiary_id == current_user.id)
+        .order_by(desc(LoanRecord.loan_date))
+        .all()
+    )
+    return records
+
 @router.get("/review-queue", response_model=List[LoanProofResponse])
 async def get_review_queue(
     skip: int = 0,

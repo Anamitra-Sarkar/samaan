@@ -17,3 +17,5 @@ folium
 pydantic[email]
 huggingface_hub
 ultralytics
+httpx
+psycopg[binary]

@@ -27,9 +27,10 @@ jobs:
           fi
 
           workdir="$(mktemp -d)"
-          git clone "https://${HF_TOKEN}@${HF_SPACE_REPO#https://}" "$workdir"
-          rsync -a --delete backend/ "$workdir"/
-          cd "$workdir"
+          repo_dir="$workdir/repo"
+          git clone "https://${HF_TOKEN}@${HF_SPACE_REPO#https://}" "$repo_dir"
+          rsync -a --delete --exclude='.git' backend/ "$repo_dir"/
+          cd "$repo_dir"
           git add -A
           if git diff --cached --quiet; then
             echo "No backend changes to sync."
@@ -39,4 +40,3 @@ jobs:
           git config user.email "copilot-sync-bot@users.noreply.github.com"
           git commit -m "Sync backend from main branch"
           git push
-

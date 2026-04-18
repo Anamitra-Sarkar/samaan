@@ -133,13 +133,21 @@ async def credit_dashboard(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
+    now = datetime.utcnow()
+    first_day_current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     scores = db.query(CreditScore).all()
     score_values = [score.composite_score for score in scores]
     distribution = Counter(score.risk_band.value for score in scores)
     pending_applications = db.query(func.count(LendingApplication.id)).filter(LendingApplication.status == "pending").scalar() or 0
     approved_applications = db.query(func.count(LendingApplication.id)).filter(LendingApplication.status == "approved").scalar() or 0
+    total_beneficiaries = db.query(func.count(ConsumptionData.beneficiary_id.distinct())).scalar() or 0
+    total_beneficiaries_last_month = db.query(func.count(User.id)).filter(
+        User.role == UserRole.BENEFICIARY,
+        User.created_at < first_day_current_month,
+    ).scalar() or 0
     return CreditDashboardResponse(
-        total_beneficiaries=db.query(func.count(ConsumptionData.beneficiary_id.distinct())).scalar() or 0,
+        total_beneficiaries=total_beneficiaries,
+        total_beneficiaries_last_month=total_beneficiaries_last_month,
         average_score=round(sum(score_values) / len(score_values), 2) if score_values else 0.0,
         risk_band_distribution={band.value: distribution.get(band.value, 0) for band in RiskBand},
         pending_applications=pending_applications,

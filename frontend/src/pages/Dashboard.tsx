@@ -31,9 +31,13 @@ export default function Dashboard() {
   const { user } = useAuthStore()
   const [stats, setStats] = useState({
     totalBeneficiaries: 0,
+    totalBeneficiariesLastMonth: 0,
     activeLoans: 0,
+    activeLoansLastMonth: 0,
     aiValidationRate: 0,
+    aiValidationRateLastMonth: 0,
     pendingReviews: 0,
+    pendingReviewsLastMonth: 0,
     activeDBTCases: 0,
     creditScoreDistribution: [],
     monthlySubmissions: [],
@@ -67,9 +71,13 @@ export default function Dashboard() {
 
         setStats({
           totalBeneficiaries: creditStats.data.total_beneficiaries || 0,
+          totalBeneficiariesLastMonth: creditStats.data.total_beneficiaries_last_month || 0,
           activeLoans: loanStats.data.active_loans || 0,
+          activeLoansLastMonth: loanStats.data.active_loans_last_month || 0,
           aiValidationRate: loanStats.data.ai_approved_percentage || 0,
+          aiValidationRateLastMonth: loanStats.data.ai_approved_pct_last_month || 0,
           pendingReviews: loanStats.data.pending_reviews || 0,
+          pendingReviewsLastMonth: loanStats.data.pending_reviews_last_month || 0,
           activeDBTCases: dbtStats.data.total_cases || 0,
           creditScoreDistribution: [
             { name: 'Low Risk High Need', value: creditStats.data.risk_band_distribution?.['LOW_RISK_HIGH_NEED'] || 0, color: '#16a34a' },
@@ -123,30 +131,31 @@ export default function Dashboard() {
           title="Total Beneficiaries" 
           value={stats.totalBeneficiaries.toString()}
           icon={Users}
-          trend="+12%"
+          trend={computeTrend(stats.totalBeneficiaries, stats.totalBeneficiariesLastMonth)}
           color="blue"
         />
         <KpiCard 
           title="Active Loans" 
           value={stats.activeLoans.toString()}
           icon={FileText}
-          trend="+8%"
+          trend={computeTrend(stats.activeLoans, stats.activeLoansLastMonth)}
           color="green"
         />
         <KpiCard 
           title="AI Validation Rate" 
           value={`${stats.aiValidationRate.toFixed(1)}%`}
           icon={CheckCircle}
-          trend="+5%"
+          trend={computeTrend(stats.aiValidationRate, stats.aiValidationRateLastMonth)}
           color="teal"
         />
         <KpiCard 
           title="Pending Reviews" 
           value={stats.pendingReviews.toString()}
           icon={Clock}
-          trend="-3"
+          trend={computeTrend(stats.pendingReviews, stats.pendingReviewsLastMonth)}
           color="orange"
           alert={stats.pendingReviews > 10}
+          invertTrend
         />
       </div>
 
@@ -283,13 +292,23 @@ export default function Dashboard() {
   )
 }
 
+function computeTrend(current: number, previous: number): string {
+  if (previous === 0 && current === 0) return 'No data yet'
+  if (previous === 0) return `+${current} new`
+  const pct = ((current - previous) / previous) * 100
+  if (pct === 0) return 'No change'
+  const sign = pct > 0 ? '+' : ''
+  return `${sign}${pct.toFixed(1)}%`
+}
+
 function KpiCard({ 
   title, 
   value, 
   icon: Icon, 
   trend, 
   color,
-  alert 
+  alert,
+  invertTrend
 }: { 
   title: string
   value: string
@@ -297,6 +316,7 @@ function KpiCard({
   trend: string
   color: string
   alert?: boolean
+  invertTrend?: boolean
 }) {
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600',
@@ -304,6 +324,13 @@ function KpiCard({
     teal: 'bg-teal-50 text-teal-600',
     orange: alert ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
   }
+  const isPositive = trend.startsWith('+')
+  const isNegative = trend.startsWith('-')
+  const trendClass = trend === 'No data yet' || trend === 'No change'
+    ? 'text-gray-400'
+    : invertTrend
+      ? (isNegative ? 'text-green-600' : isPositive ? 'text-red-600' : 'text-gray-400')
+      : (isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-400')
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -311,7 +338,7 @@ function KpiCard({
         <div>
           <p className="text-sm text-gray-500">{title}</p>
           <p className={`text-2xl font-bold mt-1 ${alert ? 'text-red-600' : 'text-gray-900'}`}>{value}</p>
-          <p className="text-xs text-gray-400 mt-1">{trend} from last month</p>
+          <p className={`text-xs mt-1 ${trendClass}`}>{trend} from last month</p>
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color as keyof typeof colorClasses]}`}>
           <Icon className="h-6 w-6" />

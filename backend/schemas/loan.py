@@ -77,10 +77,13 @@ class LoanStatsResponse(BaseModel):
     """Schema for loan statistics"""
     total_submissions: int
     active_loans: int
+    active_loans_last_month: int = 0
     ai_approved_percentage: float
+    ai_approved_pct_last_month: float = 0
     manually_reviewed_percentage: float
     fraud_flags: int
     pending_reviews: int
+    pending_reviews_last_month: int = 0
     by_status: dict
     by_state: dict
     monthly_submissions: list[dict]

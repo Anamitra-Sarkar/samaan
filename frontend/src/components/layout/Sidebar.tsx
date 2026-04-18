@@ -94,8 +94,14 @@ export default function Sidebar() {
     )
   }
 
-  const hasAccess = (item: NavItem | { roles?: string[] }) => {
-    if (!item.roles) return true
+  const hasAccess = (item: NavItem | { roles?: string[] }): boolean => {
+    if (!item.roles) {
+      // For parent items with subItems, only show if at least one subItem is accessible
+      if ('subItems' in item && item.subItems && item.subItems.length > 0) {
+        return item.subItems.some(sub => hasAccess(sub))
+      }
+      return true
+    }
     if (!user) return false
     return item.roles.includes(user.role) || user.role === 'admin'
   }

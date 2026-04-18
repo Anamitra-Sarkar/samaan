@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
     icon: TrendingUp,
     path: '/credit',
     subItems: [
-      { label: 'Credit Scores', path: '/credit/scores' },
+      { label: 'Credit Scores', path: '/credit/scores', roles: ['bank_officer', 'state_officer', 'admin'] },
       { label: 'Consumption Entry', path: '/credit/consumption', roles: ['beneficiary', 'admin'] },
       { label: 'Direct Lending', path: '/credit/lending', roles: ['bank_officer', 'admin'] },
     ]

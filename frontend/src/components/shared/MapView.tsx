@@ -1,4 +1,5 @@
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
+/* @vite-ignore */
 import 'leaflet/dist/leaflet.css'
 
 type VillagePoint = {

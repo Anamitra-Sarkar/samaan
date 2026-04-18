@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react'
+import React, { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { client } from '../../api/client'
 import { usePageTitle } from '../../hooks/usePageTitle'
@@ -45,34 +45,20 @@ type VillageListResponseItem = {
   }
 }
 
-type MapComponentType = ComponentType<{ points: VillagePoint[]; onSelect?: (id: number) => void }>
 
+
+const MapView = lazy(() => import('../../components/shared/MapView'))
 export default function VillageMap() {
   usePageTitle('Village Gap Map')
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [mapError, setMapError] = useState<string | null>(null)
   const [stats, setStats] = useState({ total_villages: 0, average_gap_score: 0, adarsh_gram_percentage: 0, total_sc_population: 0 })
   const [points, setPoints] = useState<VillagePoint[]>([])
   const [rows, setRows] = useState<VillageListRow[]>([])
   const [sortAsc, setSortAsc] = useState(false)
   const [selectedState, setSelectedState] = useState<string>('')
-  const [MapComponent, setMapComponent] = useState<MapComponentType | null>(null)
 
-  useEffect(() => {
-    let alive = true
-    import('../../components/shared/MapView')
-      .then((mod) => {
-        if (alive) setMapComponent(() => mod.default)
-      })
-      .catch((importError) => {
-        if (alive) setMapError(importError instanceof Error ? importError.message : 'Map failed to load')
-      })
-    return () => {
-      alive = false
-    }
-  }, [])
 
   useEffect(() => {
     const load = async () => {
@@ -172,17 +158,13 @@ export default function VillageMap() {
             </div>
           </div>
 
-          {MapComponent && filteredPoints.length > 0 ? (
+          <MapErrorBoundary>
             <div className="rounded-xl bg-white p-4 shadow-sm">
-              <MapComponent points={filteredPoints} onSelect={(id) => navigate(`/village/${id}`)} />
+              <Suspense fallback={<SkeletonMap />}>
+                <MapView points={filteredPoints} onSelect={(id) => navigate(`/village/${id}`)} />
+              </Suspense>
             </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-10 text-center text-sm text-gray-600 shadow-sm">
-              {mapError
-                ? `Interactive map unavailable: ${mapError}`
-                : 'No village coordinates available yet. Add village records to display the live map.'}
-            </div>
-          )}
+          </MapErrorBoundary>
 
           <div className="rounded-xl bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
@@ -236,6 +218,33 @@ export default function VillageMap() {
       )}
     </div>
   )
+}
+
+
+type MapErrorBoundaryProps = { children: React.ReactNode }
+type MapErrorBoundaryState = { hasError: boolean }
+
+class MapErrorBoundary extends React.Component<MapErrorBoundaryProps, MapErrorBoundaryState> {
+  constructor(props: MapErrorBoundaryProps) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(): MapErrorBoundaryState {
+    return { hasError: true }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-10 text-center text-sm text-gray-600 shadow-sm">
+          Interactive map unavailable. Please refresh the page.
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
 }
 
 function topGapSummary(gapSummary?: Record<string, number> | null) {

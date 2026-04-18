@@ -74,6 +74,7 @@ class LendingDecision(BaseModel):
 class CreditDashboardResponse(BaseModel):
     """Schema for credit dashboard"""
     total_beneficiaries: int
+    total_beneficiaries_last_month: int = 0
     average_score: float
     risk_band_distribution: Dict[str, int]
     pending_applications: int

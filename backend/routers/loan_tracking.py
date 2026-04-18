@@ -336,10 +336,24 @@ async def get_loan_stats(
     db: Session = Depends(get_db)
 ):
     """Get loan tracking statistics"""
+    now = datetime.utcnow()
+    previous_month_anchor = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    if previous_month_anchor.month == 1:
+        previous_year = previous_month_anchor.year - 1
+        previous_month = 12
+    else:
+        previous_year = previous_month_anchor.year
+        previous_month = previous_month_anchor.month - 1
+    previous_month_key = f"{previous_year:04d}-{previous_month:02d}"
+
     # Total submissions
     total_submissions = db.query(func.count(LoanProof.id)).scalar() or 0
 
     active_loans = db.query(func.count(LoanRecord.id)).filter(LoanRecord.loan_status == LoanStatus.ACTIVE).scalar() or 0
+    active_loans_last_month = db.query(func.count(LoanRecord.id)).filter(
+        LoanRecord.loan_status == LoanStatus.ACTIVE,
+        func.strftime("%Y-%m", LoanRecord.created_at) == previous_month_key,
+    ).scalar() or 0
     
     # AI approved percentage
     ai_approved = db.query(func.count(LoanProof.id)).filter(
@@ -348,6 +362,18 @@ async def get_loan_stats(
     
     ai_approved_percentage = (
         (ai_approved / total_submissions * 100) if total_submissions > 0 else 0
+    )
+
+    previous_month_submissions = db.query(func.count(LoanProof.id)).filter(
+        func.strftime("%Y-%m", LoanProof.created_at) == previous_month_key
+    ).scalar() or 0
+    previous_month_ai_approved = db.query(func.count(LoanProof.id)).filter(
+        LoanProof.ai_validation_status == LoanProofValidationStatus.APPROVED,
+        func.strftime("%Y-%m", LoanProof.created_at) == previous_month_key
+    ).scalar() or 0
+    ai_approved_pct_last_month = (
+        (previous_month_ai_approved / previous_month_submissions * 100)
+        if previous_month_submissions > 0 else 0
     )
     
     # Manually reviewed percentage
@@ -372,6 +398,14 @@ async def get_loan_stats(
             LoanProofValidationStatus.MANUAL_REVIEW
         ]),
         LoanProof.reviewer_decision.is_(None)
+    ).scalar() or 0
+    pending_reviews_last_month = db.query(func.count(LoanProof.id)).filter(
+        LoanProof.ai_validation_status.in_([
+            LoanProofValidationStatus.PENDING,
+            LoanProofValidationStatus.MANUAL_REVIEW
+        ]),
+        LoanProof.reviewer_decision.is_(None),
+        func.strftime("%Y-%m", LoanProof.created_at) == previous_month_key,
     ).scalar() or 0
     
     # Stats by status
@@ -398,10 +432,13 @@ async def get_loan_stats(
     return LoanStatsResponse(
         total_submissions=total_submissions,
         active_loans=active_loans,
+        active_loans_last_month=active_loans_last_month,
         ai_approved_percentage=ai_approved_percentage,
+        ai_approved_pct_last_month=ai_approved_pct_last_month,
         manually_reviewed_percentage=manually_reviewed_percentage,
         fraud_flags=fraud_flags,
         pending_reviews=pending_reviews,
+        pending_reviews_last_month=pending_reviews_last_month,
         by_status=by_status,
         by_state=by_state,
         monthly_submissions=monthly_submissions,

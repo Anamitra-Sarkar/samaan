@@ -27,7 +27,7 @@ export default function SocialPension() {
   const [error, setError] = useState<string | null>(null)
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { state: 'Uttar Pradesh', district: 'Sitapur', case_type: 'poa', incident_date: new Date().toISOString().slice(0, 16) },
+    defaultValues: { state: '', district: '', case_type: 'poa', incident_date: new Date().toISOString().slice(0, 16) },
   })
 
   const onSubmit = async (values: Values) => {

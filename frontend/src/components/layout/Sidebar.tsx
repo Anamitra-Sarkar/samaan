@@ -48,8 +48,8 @@ const navItems: NavItem[] = [
     icon: Map,
     path: '/village',
     subItems: [
-      { label: 'Village Map', path: '/village/map' },
-      { label: 'Gap Reports', path: '/village/list' },
+      { label: 'Village Map', path: '/village/map', roles: ['state_officer', 'bank_officer', 'admin'] },
+      { label: 'Gap Reports', path: '/village/list', roles: ['state_officer', 'bank_officer', 'admin'] },
     ]
   },
   {
@@ -57,9 +57,9 @@ const navItems: NavItem[] = [
     icon: Landmark,
     path: '/agency',
     subItems: [
-      { label: 'Directory', path: '/agency/directory' },
-      { label: 'Fund Flow', path: '/agency/fund-flow' },
-      { label: 'Mapping', path: '/agency/accountability' },
+      { label: 'Directory', path: '/agency/directory', roles: ['state_officer', 'bank_officer', 'admin'] },
+      { label: 'Fund Flow', path: '/agency/fund-flow', roles: ['state_officer', 'bank_officer', 'admin'] },
+      { label: 'Mapping', path: '/agency/accountability', roles: ['state_officer', 'bank_officer', 'admin'] },
     ]
   },
   {
@@ -67,12 +67,12 @@ const navItems: NavItem[] = [
     icon: Shield,
     path: '/dbt',
     subItems: [
-      { label: 'Victim Registry', path: '/dbt/victims' },
-      { label: 'Disbursement Tracker', path: '/dbt/disbursements' },
-      { label: 'DBT Checker', path: '/dbt/checker' },
-      { label: 'Case List', path: '/dbt/cases' },
-      { label: 'Victim Registration', path: '/dbt/register' },
-      { label: 'Grievance Portal', path: '/dbt/grievance' },
+      { label: 'Victim Registry', path: '/dbt/victims', roles: ['state_officer', 'admin'] },
+      { label: 'Disbursement Tracker', path: '/dbt/disbursements', roles: ['state_officer', 'bank_officer', 'admin'] },
+      { label: 'DBT Checker', path: '/dbt/checker', roles: ['state_officer', 'admin'] },
+      { label: 'Case List', path: '/dbt/cases', roles: ['state_officer', 'admin'] },
+      { label: 'Victim Registration', path: '/dbt/register', roles: ['state_officer', 'admin'] },
+      { label: 'Grievance Portal', path: '/dbt/grievance', roles: ['beneficiary', 'state_officer', 'admin'] },
     ]
   },
 ]

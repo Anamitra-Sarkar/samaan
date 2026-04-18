@@ -74,22 +74,22 @@ function App() {
           <Route path="loan/upload" element={<ProtectedRoute allowedRoles={['beneficiary', 'admin']}><BeneficiaryUpload /></ProtectedRoute>} />
           <Route path="loan/review" element={<ProtectedRoute allowedRoles={['state_officer', 'admin']}><OfficerReview /></ProtectedRoute>} />
           <Route path="loan/data-entry" element={<ProtectedRoute allowedRoles={['state_officer', 'admin']}><LoanDataEntry /></ProtectedRoute>} />
-          <Route path="credit/scores" element={<CreditScoreView />} />
+          <Route path="credit/scores" element={<ProtectedRoute allowedRoles={['bank_officer', 'state_officer', 'admin']}><CreditScoreView /></ProtectedRoute>} />
           <Route path="credit/consumption" element={<ProtectedRoute allowedRoles={['beneficiary', 'admin']}><ConsumptionEntry /></ProtectedRoute>} />
           <Route path="credit/lending" element={<ProtectedRoute allowedRoles={['bank_officer', 'admin']}><DirectLending /></ProtectedRoute>} />
-          <Route path="village/map" element={<VillageMap />} />
-          <Route path="village/list" element={<GapReport />} />
-          <Route path="village/:id" element={<VillageDetail />} />
-          <Route path="agency/directory" element={<AgencyDirectory />} />
-          <Route path="agency/fund-flow" element={<FundFlow />} />
-          <Route path="agency/accountability" element={<AgencyMapping />} />
-          <Route path="dbt/victims" element={<VictimRegistry />} />
-          <Route path="dbt/disbursements" element={<DisbursementTracker />} />
-          <Route path="dbt/checker" element={<DBTChecker />} />
-          <Route path="dbt/register" element={<SocialPension />} />
-          <Route path="dbt/cases" element={<DBTSchemes />} />
-          <Route path="dbt/case/:id" element={<DBTCaseDetail />} />
-          <Route path="dbt/grievance" element={<GrievancePortal />} />
+          <Route path="village/map" element={<ProtectedRoute allowedRoles={['state_officer', 'bank_officer', 'admin']}><VillageMap /></ProtectedRoute>} />
+          <Route path="village/list" element={<ProtectedRoute allowedRoles={['state_officer', 'bank_officer', 'admin']}><GapReport /></ProtectedRoute>} />
+          <Route path="village/:id" element={<ProtectedRoute allowedRoles={['state_officer', 'bank_officer', 'admin']}><VillageDetail /></ProtectedRoute>} />
+          <Route path="agency/directory" element={<ProtectedRoute allowedRoles={['state_officer', 'bank_officer', 'admin']}><AgencyDirectory /></ProtectedRoute>} />
+          <Route path="agency/fund-flow" element={<ProtectedRoute allowedRoles={['state_officer', 'bank_officer', 'admin']}><FundFlow /></ProtectedRoute>} />
+          <Route path="agency/accountability" element={<ProtectedRoute allowedRoles={['state_officer', 'bank_officer', 'admin']}><AgencyMapping /></ProtectedRoute>} />
+          <Route path="dbt/victims" element={<ProtectedRoute allowedRoles={['state_officer', 'admin']}><VictimRegistry /></ProtectedRoute>} />
+          <Route path="dbt/disbursements" element={<ProtectedRoute allowedRoles={['state_officer', 'bank_officer', 'admin']}><DisbursementTracker /></ProtectedRoute>} />
+          <Route path="dbt/checker" element={<ProtectedRoute allowedRoles={['state_officer', 'admin']}><DBTChecker /></ProtectedRoute>} />
+          <Route path="dbt/register" element={<ProtectedRoute allowedRoles={['state_officer', 'admin']}><SocialPension /></ProtectedRoute>} />
+          <Route path="dbt/cases" element={<ProtectedRoute allowedRoles={['state_officer', 'admin']}><DBTSchemes /></ProtectedRoute>} />
+          <Route path="dbt/case/:id" element={<ProtectedRoute allowedRoles={['state_officer', 'admin']}><DBTCaseDetail /></ProtectedRoute>} />
+          <Route path="dbt/grievance" element={<ProtectedRoute allowedRoles={['beneficiary', 'state_officer', 'admin']}><GrievancePortal /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
         <Route path="/loan/beneficiary-upload" element={<Navigate to="/loan/upload" replace />} />
